@@ -1,0 +1,5 @@
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../../lib/nook_web";
+/* Only utilities: keep the established canvas styles and browser defaults intact. */

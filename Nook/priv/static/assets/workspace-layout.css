@@ -1,0 +1,83 @@
+/* Workspace chrome lives at the edges; guidance is available on demand in Help. */
+#tool-dock{position:fixed;top:92px;left:16px;right:16px;z-index:8;display:flex;align-items:flex-start;gap:10px;pointer-events:none}
+#tool-dock>*{pointer-events:auto}
+#tool-dock #tools-toggle{position:static;flex-shrink:0;margin:0;padding:10px 12px;min-height:38px;border-radius:10px;font-size:12px;white-space:nowrap}
+#tool-dock #active-tool{position:static;align-self:flex-start;padding:10px 12px;background:white;border:1px solid var(--border);border-radius:10px;font-size:12px}
+#tool-dock #toolbar{position:static;transform:none;margin:0;max-width:100%;flex-shrink:1}
+#selection-bar{position:fixed;top:auto;bottom:16px;left:16px;right:auto;transform:none;width:max-content;max-width:calc(100vw - 32px);gap:8px;padding:7px;border-radius:12px;justify-content:flex-start;z-index:10}
+#selection-bar>button{min-height:34px;padding:6px 12px;font-size:12px}
+#selection-bar .advanced-options{top:auto;bottom:calc(100% + 10px);left:0;right:auto;width:330px;max-width:calc(100vw - 32px);padding:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#advanced-options>label,#advanced-options>#selection-count{grid-column:1/-1}
+#advanced-options>button{text-align:left;white-space:normal;min-height:34px;border:1px solid var(--border);border-radius:7px}
+#advanced-options input{max-width:80px}
+#workspace .zoom-controls{position:fixed;right:16px;bottom:16px;top:auto;left:auto;transform:none;margin:0;padding:6px;gap:4px;z-index:10}
+#workspace .zoom-controls #navigation-settings{bottom:calc(100% + 10px);max-width:calc(100vw - 32px);white-space:normal;width:300px;line-height:1.5}
+.workspace-help{font-size:13px;border:1px solid var(--border);border-radius:10px;min-height:38px;padding:8px 12px;background:white}
+.app-header{padding-left:16px;padding-right:16px;gap:16px}
+.header-right{gap:10px}
+#help-dialog .board-lifecycle{position:static;transform:none;display:flex;flex-wrap:wrap;gap:8px;max-width:100%;width:auto;margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:9px;font-size:12px;line-height:1.6}
+#help-dialog .board-lifecycle>span{width:100%}
+#help-dialog .name-board{display:inline-block;margin:4px 0 12px}
+#help-dialog .help-current-tool{border-bottom:1px solid var(--border);margin-bottom:14px}
+#help-dialog h3{font-size:14px;margin:14px 0 4px}
+#help-dialog p{font-size:12px;line-height:1.7}
+#toast{position:fixed;bottom:80px;max-width:min(460px,calc(100vw - 32px))}
+.history-notice,.overlap-notice{position:fixed;left:16px;bottom:80px;max-width:min(470px,calc(100vw - 32px))}
+.overlap-notice{bottom:155px}
+@media(max-width:900px){.app-header{gap:10px}.header-right{gap:8px}#board-title{width:115px}#save-status{font-size:10px}#tool-dock .tool{width:clamp(44px,8vw,70px)}}
+@media(max-width:650px){#tool-dock{top:81px;flex-wrap:wrap;gap:8px}#tool-dock #toolbar{flex-basis:100%;width:max-content;padding:6px}#tool-dock .tool{width:calc((100vw - 52px)/8);max-width:64px;min-width:0}#selection-bar{bottom:78px}#selection-bar .advanced-options{width:310px}#workspace .zoom-controls{right:16px;bottom:16px}.workspace-help{font-size:12px;padding:6px 9px}.app-header{gap:8px}#board-title{width:95px}.header-right{gap:6px}.app-header .brand{width:66px}#save-status{position:absolute;top:49px;left:99px;font-size:8px}#toast{bottom:136px}.history-notice{bottom:136px}.overlap-notice{bottom:210px}}
+
+/* Selection actions follow the selected object rather than occupying a corner. */
+#workspace #selection-bar{bottom:auto;right:auto;flex-wrap:wrap;max-width:calc(100vw - 24px)}
+#workspace #selection-bar .advanced-options{position:fixed;bottom:auto;right:auto;max-width:calc(100vw - 24px)}
+
+/* Temporary overlap previews sit above covering items without changing their layers. */
+.overlap-target-preview{position:absolute;z-index:1000005;pointer-events:none;border:3px solid #7841be;background:#ad7bfa18;box-shadow:0 0 0 2px white;outline:2px dashed #fff;border-radius:4px}
+.overlap-target-preview span{position:absolute;left:0;bottom:calc(100% + 7px);white-space:nowrap;max-width:500px;overflow:hidden;text-overflow:ellipsis;background:#210a3b;color:white;border:1px solid white;border-radius:5px;line-height:1.4;pointer-events:none}
+#overlap-list button{display:flex;align-items:center;gap:9px}
+.overlap-color-chip{display:inline-block;width:16px;height:16px;border:1px solid #82788f;border-radius:4px;flex-shrink:0}
+#overlap-list button:hover,#overlap-list button:focus-visible{background:#eee3ff;border-color:#7841be}
+
+/* All card bodies are draggable; written text retains native editing and selection. */
+#workspace .element.text,#workspace .element.text .content,#workspace .element.icon{pointer-events:auto}
+#workspace .element.icon .icon-glyph{pointer-events:none}
+.text-hit-measure{position:fixed;visibility:hidden;pointer-events:none;white-space:pre-wrap;overflow-wrap:anywhere;box-sizing:border-box;border:0;margin:0}
+#workspace #shape-menu,#workspace #icon-menu{position:fixed;transform:none;bottom:auto;max-width:calc(100vw - 24px);z-index:31}
+
+/* Reveal mode never changes saved layers. Selected revealed items stay above their neighbors locally. */
+#workspace .element.reveal-active{z-index:1000001!important}
+#reveal-outlines{position:absolute;inset:0;pointer-events:none;z-index:1000002}
+.revealed-item-outline{position:absolute;pointer-events:none}
+.revealed-item-outline>svg{position:absolute;width:100%;height:100%;overflow:visible;pointer-events:none}
+.revealed-item-outline rect{fill:none;stroke:#8951cf;stroke-dasharray:5 3;pointer-events:stroke;cursor:move}
+.revealed-item-outline.reveal-current rect{stroke:#210a3b;stroke-dasharray:none}
+.reveal-item-label{position:absolute;left:0;bottom:100%;background:#fff;color:#210a3b;border:1px solid #8951cf;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;line-height:1.4}
+.reveal-item-label:hover,.reveal-item-label:focus-visible{background:#eee3ff}
+#reveal-controls{position:fixed;bottom:16px;left:16px;z-index:12;display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid #ad7bfa;border-radius:10px;background:white;font-size:12px;box-shadow:0 3px 16px #210a3b15}
+#finish-reveal{border:1px solid #ded7e5;border-radius:7px;padding:7px 10px;background:#f6f0ff}
+@media(max-width:650px){#reveal-controls{bottom:78px;max-width:calc(100vw - 32px);flex-wrap:wrap}}
+
+/* Once an item is chosen, the other outlines stay visible but cannot intercept its editing. */
+#reveal-outlines.reveal-working .revealed-item-outline:not(.reveal-current) rect{pointer-events:none}
+#reveal-outlines.reveal-working .revealed-item-outline:not(.reveal-current) .reveal-item-label{visibility:hidden;pointer-events:none}
+
+/* Task titles stay discoverable after blur/reload, including legacy checklist cards. */
+#workspace .element.task>.content{display:block;min-height:25px;margin-bottom:7px;cursor:text}
+#workspace .element.task>.content:empty::before{content:attr(data-placeholder);color:#82738e;pointer-events:none;font-weight:400;font-size:13px}
+
+/* Drawing is a separate interaction mode; saved strokes use normal selection. */
+.element.stroke{padding:0!important;background:transparent!important;border:0;box-shadow:none;}
+.stroke-art{display:block;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.drawing-preview{position:absolute;pointer-events:none;z-index:1000001;}
+.drawing-mode,.drawing-mode .element,.drawing-mode .element *{cursor:crosshair!important;}
+.draw-controls{position:absolute;right:24px;bottom:94px;z-index:30;background:white;border:1px solid #e4daef;border-radius:16px;padding:12px 16px;box-shadow:0 8px 28px #210a3b12;display:flex;align-items:center;gap:16px;max-width:calc(100% - 48px);}
+.draw-controls[hidden]{display:none;}.draw-controls label{display:flex;align-items:center;gap:8px;}.draw-controls input[type=range]{width:90px;}.draw-controls input[type=color]{width:36px;height:32px;padding:2px;border:1px solid #e4daef;border-radius:8px;background:white;}.draw-controls span{font-size:12px;color:#695a78;}
+@media(max-width:640px){.draw-controls{right:12px;bottom:86px;gap:10px;max-width:calc(100% - 24px);}.draw-controls span{display:none;}}
+
+.standard-color-grid{display:grid;grid-template-columns:repeat(10,24px);gap:3px;margin:10px 0;}
+.standard-color-grid .standard-color{width:24px;height:24px;min-width:0;padding:0;border:1px solid #210a3b30;border-radius:3px;}
+.standard-color:hover,.standard-color:focus-visible{outline:2px solid #7640a8;outline-offset:1px;transform:scale(1.15);z-index:1;}
+.draw-palette{position:absolute;right:0;bottom:calc(100% + 10px);background:#fff;padding:12px;border:1px solid #e4daef;border-radius:12px;box-shadow:0 8px 28px #210a3b12;}
+.draw-palette[hidden]{display:none;}.draw-controls{flex-wrap:wrap;}.draw-controls button[aria-pressed=true]{background:#eee3ff;color:#210a3b;}
+.draw-group-box{position:absolute;border:2px solid #ad7bfa;background:#ad7bfa18;pointer-events:none;z-index:1000001;}
+.draw-group-candidate{outline:2px solid #ad7bfa;}

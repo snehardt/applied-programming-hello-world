@@ -1,0 +1,112 @@
+/* Milestone 2: preserve the Nook surfaces while keeping the toolbar at the top. */
+#toolbar{top:94px;bottom:auto}
+.canvas-caption{top:198px;bottom:auto}
+#selection-bar{top:220px;width:max-content;max-width:calc(100vw - 28px);flex-wrap:wrap;justify-content:center}
+#selection-bar label{display:flex;align-items:center;gap:5px;font-size:10px;white-space:nowrap}
+#selection-bar select{font:inherit;border:1px solid var(--border);padding:4px;border-radius:5px;background:#fff;color:var(--ink)}
+#shape-menu{position:absolute;top:194px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:9;padding:8px;background:white;border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 30px #31114715}
+#shape-menu button{min-width:68px;padding:8px 6px;border-radius:8px;font-size:25px;line-height:1.2;color:#8d62b7}
+#shape-menu button span{display:block;font-size:10px;margin-top:5px;color:var(--ink)}
+#shape-menu button:hover,#shape-menu button:focus-visible{background:var(--lilac)}
+.element.shape{background:transparent!important;border:0;border-radius:0;box-shadow:none;padding:20px}
+.element.shape .content{position:relative;z-index:1;min-height:25px;max-height:75%;width:100%;overflow:visible}
+.element.shape[data-shape=diamond] .content{max-width:56%;margin:auto}
+.element.shape[data-shape=triangle] .content{max-width:55%;margin:35px auto 0}
+.shape-outline{position:absolute;inset:0;width:100%;height:100%;fill:var(--lilac);stroke:#9e77c7;stroke-width:1.5;overflow:visible;pointer-events:none}
+.shape-outline *{vector-effect:non-scaling-stroke}
+.element[data-color=yellow] .shape-outline{fill:var(--yellow);stroke:#c8a355}
+.element[data-color=peach] .shape-outline{fill:var(--peach);stroke:#cb927a}
+.element[data-color=mint] .shape-outline{fill:var(--mint);stroke:#7ca98f}
+.element[data-color=white] .shape-outline{fill:white}
+.element[data-text-color=purple] .content{color:#210a3b}
+.element[data-text-color=charcoal] .content{color:#30293b}
+.element[data-text-color=violet] .content{color:#7640a8}
+.element[data-text-color=white] .content{color:#fff}
+.element.task .content{height:auto;min-height:25px;max-height:55%;font-weight:550}
+.task-description{display:block;width:100%;height:calc(100% - 30px);min-height:24px;resize:none;border:0;background:transparent;outline-offset:2px;color:#82738f;font:12px/1.5 'DM Sans',sans-serif;padding:3px 0;overflow:visible}
+.task-description::placeholder{color:#aaa0b4;font-size:11px}
+.element.file .file-icon{display:block;color:#9b7abc;font-size:25px;margin-bottom:6px;pointer-events:none}
+.element.file .content{height:calc(100% - 40px);font-size:13px}
+.element.idea:before{display:none}
+.idea-symbol{height:32px;width:32px;margin:0 auto 8px;color:#bc954c;pointer-events:none}
+.idea-symbol svg{width:100%;height:100%}
+.element.idea .content{height:calc(100% - 40px)}
+.placement-preview{position:absolute;pointer-events:none;border:1.5px dashed #a177ca;border-radius:6px;background:#ece1fa70;color:#9774b4;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:1000001;opacity:.65}
+.placement-preview.shape{border:0;background:none}
+.placement-preview.shape svg{width:100%;height:100%;fill:#ece1fa70;stroke:#a177ca;stroke-width:1;stroke-dasharray:3 3}
+.placement-preview.shape svg *{vector-effect:non-scaling-stroke}
+.phx-disconnected #toolbar{opacity:.65}
+/* Milestone 5: direct editing, selection, checklists, and collaborative pointers. */
+.element{cursor:text}.element .content{cursor:text;min-height:24px;user-select:text}
+.element:not(.editing) .content{user-select:none}
+.element .content:empty:before{content:attr(data-placeholder);color:#a398ad;pointer-events:none;font-weight:400}
+.element.over-edge,.element .resize{cursor:move}.element .resize{padding:0;cursor:nwse-resize;z-index:4;touch-action:none}
+.element[data-color=white]{background:#fff;box-shadow:none}
+.element.text .content{overflow:visible}.element.note .content{height:auto;min-height:100%;overflow:visible}
+.element.selected.grouped{outline-style:dashed}
+#selection-bar #font-size{width:56px;border:1px solid var(--border);border-radius:5px;padding:4px;font:inherit}
+#selection-count{height:auto!important;width:auto!important;background:none!important;font-size:11px;color:#8760ac}
+#selection-bar button:hover{color:#7640a8}#selection-bar .white{background:#fff}
+.text-measure{position:fixed;left:-20000px;top:0;visibility:hidden;pointer-events:none;white-space:pre-wrap;overflow-wrap:anywhere;display:inline-block}
+.marquee{position:absolute;pointer-events:none;background:#ad7bfa22;border:1px solid #9e6be2;z-index:3;border-radius:2px}
+.multi-bounds{position:absolute;border:1px dashed #9760d0;pointer-events:none;z-index:1000002}
+.multi-resize{position:absolute;right:-6px;bottom:-6px;width:12px;height:12px;border:2px solid #9760d0;background:#fff;border-radius:3px;padding:0;cursor:nwse-resize;pointer-events:auto}
+#connections .connection-handle{fill:#fff;stroke:#9360c5;stroke-width:2;pointer-events:all;cursor:crosshair}
+#connections .connection-preview{stroke-dasharray:6 4;pointer-events:none;opacity:.7}
+#canvas.connecting .element,#canvas.connecting .content{cursor:crosshair!important}
+#canvas.panning,#canvas.panning *{cursor:grabbing!important}
+.element.task{padding:16px;border-radius:12px;min-width:180px}
+.element.task .content{font-weight:600;max-height:none;min-height:25px;height:auto;margin-bottom:7px;overflow:visible}
+.element.task .content:empty:before{font-size:13px}
+.task-list{display:flex;flex-direction:column;gap:5px}.task-row{display:flex;align-items:center;gap:7px;min-height:30px;border-radius:5px}
+.task-reorder{width:16px;flex-shrink:0;cursor:grab;color:#a191ad;touch-action:none;padding:0;font-size:17px}
+.task-row input.item-check{position:static;width:17px;height:17px;flex-shrink:0;margin:0;accent-color:#9460c9;cursor:pointer}
+.task-item-text{min-width:0;flex:1;width:100%;border:0;background:transparent;color:var(--purple);font:16px/1.55 'DM Sans',sans-serif;padding:3px 0;outline-offset:1px;cursor:text}
+.task-item-text::placeholder{color:#aa9bb5}.task-row.completed .task-item-text{text-decoration:line-through;color:#9a8da4}
+.task-remove{width:20px;flex-shrink:0;color:#a494b1;padding:0;font-size:19px;opacity:0}.task-row:hover .task-remove,.task-remove:focus-visible{opacity:1}
+.task-add{font-size:12px;color:#8756b8;padding:8px 0 4px;margin-left:23px}.element.task .task-description{height:32px;min-height:25px;margin-top:5px;font-size:12px}
+.task-row.reorder-target{outline:1px dashed #ad7bfa;background:#ad7bfa15}
+.cursor-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:4}
+.remote-cursor{position:absolute;left:0;top:0;color:#9861d6;will-change:transform;transition:transform 60ms linear;font-size:16px;display:flex;align-items:flex-start;gap:4px;filter:drop-shadow(0 1px 1px #fff)}
+.cursor-arrow{display:block;transform:rotate(-120deg);line-height:16px}.cursor-name{background:currentColor;border:1px solid #ffffffb0;border-radius:4px;margin-top:12px;padding:2px 7px;font-size:11px;white-space:nowrap}
+.cursor-name{color:#fff;background:#9861d6}.remote-cursor[data-color=teal]{color:#258978}.remote-cursor[data-color=teal] .cursor-name{background:#258978}
+.remote-cursor[data-color=amber]{color:#b77d16}.remote-cursor[data-color=amber] .cursor-name{background:#b77d16}.remote-cursor[data-color=rose]{color:#c45684}.remote-cursor[data-color=rose] .cursor-name{background:#c45684}
+.remote-cursor[data-color=blue]{color:#4975c7}.remote-cursor[data-color=blue] .cursor-name{background:#4975c7}
+@media(max-width:650px){#toolbar{top:80px;bottom:auto}.canvas-caption{top:157px;bottom:auto;font-size:8px}#selection-bar{top:183px;gap:6px;padding:8px;font-size:10px;width:max-content}#shape-menu{top:155px;max-width:calc(100vw - 20px);gap:0}#shape-menu button{min-width:58px}#selection-bar .swatch{width:18px;height:18px}}
+
+.element.note[data-color=white]{background:transparent;box-shadow:none}
+#navigation-mode{border:0;background:#fff;color:#82738f;font-size:10px;max-width:72px;padding:4px;cursor:pointer}
+
+.element.text,.element.note[data-color=white]{min-width:50px}
+
+#connection-handles{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:1000003}
+#connection-handles .connection-handle{fill:#fff;stroke:#9360c5;stroke-width:2;pointer-events:all;cursor:crosshair;vector-effect:non-scaling-stroke}
+
+.element.task{display:flex;flex-direction:column}.element.task>.content,.element.task>.task-add,.element.task>.task-description{flex-shrink:0}
+.element.task .task-list{min-height:0;overflow:visible;flex:1}.element.task[data-legacy-task=true]>.content{display:none}
+.element.task .task-description:placeholder-shown{height:28px;min-height:28px}
+.element.task[data-legacy-task=true]{padding:12px}
+.tool-placement-preview{pointer-events:none!important;opacity:.55;outline:1px dashed #9460c9;z-index:1000004!important;user-select:none}
+.tool-placement-preview .placement-label{position:absolute;white-space:nowrap;color:#7640a8;line-height:1.55;font-weight:400;pointer-events:none}
+.tool-placement-preview .placement-caret{position:absolute;width:1px;background:#7640a8;transform:translateY(-50%);pointer-events:none}
+
+/* 0.5.2: fixed-width editing, visible content hit targets, and spaced task rows. */
+.element{cursor:move}.element .content{cursor:inherit;overflow:visible!important;max-height:none!important;user-select:text}
+.element .content:empty:before{content:none}.element.editing .content:empty:before{content:attr(data-placeholder)}
+.element.note .content,.element.idea .content,.element.text .content{height:100%;min-height:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.element.idea .idea-symbol{display:none}.element.idea .content{margin:0}
+.element.task .content{flex:0 0 auto;height:auto;min-height:0}.element.task:not(.editing)[data-has-text=false]>.content{display:none}
+.element.task .task-list{flex:0 1 auto;min-height:34px;gap:8px;overflow:visible}
+.task-row{flex:0 0 auto;min-height:34px;align-items:start;gap:8px;padding:2px 0}
+.task-row .task-reorder,.task-row .item-check,.task-row .task-remove{margin-top:7px}
+.task-item-text{display:block;resize:none;overflow:hidden;border:0;min-height:32px;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere}
+.task-remove{opacity:1!important;cursor:pointer;min-width:22px;min-height:24px}
+.task-insert-zone{flex:0 0 22px;min-height:22px;width:100%;padding:0;cursor:text;border-radius:5px}
+.task-insert-zone:hover,.task-insert-zone:focus-visible{background:#ad7bfa15}
+.task-add{flex:0 0 auto;align-self:start;margin:0 0 0 24px;padding:6px 0;cursor:pointer}
+
+/* Canvas items always fit their content; never create nested scroll areas. */
+.element .content{height:auto!important;max-height:none!important;overflow:visible!important;white-space:pre-wrap;overflow-wrap:anywhere}
+.element.task .task-list{flex:0 0 auto;overflow:visible}
+.task-item-text{overflow:hidden;scrollbar-width:none}
+.task-item-text::-webkit-scrollbar{display:none}

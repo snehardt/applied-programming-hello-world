@@ -1,0 +1,4 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {fileError} from '../priv/static/assets/file-policy.mjs';
+test('file chooser and drop allow supported files and reject oversize/active content',()=>{for(const type of ['image/png','image/jpeg','image/webp','application/pdf','text/plain'])assert.equal(fileError({size:123,type,name:'file'}),null);assert.equal(fileError({size:123,type:'',name:'plan.md'}),null);assert.match(fileError({size:1000001,type:'image/png',name:'big.png'}),/1 MB/);for(const type of ['image/svg+xml','text/html','application/javascript'])assert.ok(fileError({size:50,type,name:'file'}));});
+
+test('empty files and names beyond the storage limit are caught before placement',()=>{assert.match(fileError({size:0,type:'text/plain',name:'empty.txt'}),/empty/);assert.match(fileError({size:4,type:'text/plain',name:'x'.repeat(256)}),/name/);});

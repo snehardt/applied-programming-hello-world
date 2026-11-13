@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: nook-whiteboard
+    runtime: elixir
+    plan: free
+    region: oregon
+    buildCommand: bash scripts/render-build.sh
+    startCommand: bash scripts/render-start.sh
+    healthCheckPath: /health/live
+    autoDeployTrigger: "off"
+    envVars:
+      - key: ELIXIR_VERSION
+        value: 1.18.4
+      - key: ERLANG_VERSION
+        value: 27.3.4.2
+      - key: MIX_ENV
+        value: prod
+      - key: PHX_SERVER
+        value: "true"
+      - key: NOOK_BIND_IP
+        value: 0.0.0.0
+      - key: NOOK_AUTH_MODE
+        value: google
+      - key: SECRET_KEY_BASE
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: POOL_SIZE
+        value: "2"
+      - key: DB_IDLE_INTERVAL
+        value: "600000"
+      - key: NOOK_EXPIRY_INTERVAL_MS
+        value: "3600000"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
