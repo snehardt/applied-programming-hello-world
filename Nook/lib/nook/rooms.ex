@@ -16,7 +16,34 @@ defmodule Nook.Rooms do
       )
   end
 
-  def request(code, actor, label) do
+  def new_code do
+    code = :crypto.strong_rand_bytes(4) |> Base.encode32(padding: false) |> binary_part(0, 6)
+    if Repo.exists?(from(b in Board, where: b.room_code == ^code)), do: new_code(), else: code
+  end
+
+  def resolve_code(raw) when is_binary(raw) do
+    normalized = raw |> String.trim() |> String.upcase() |> String.replace(~r/[\s-]/, "")
+
+    if byte_size(normalized) in 1..64,
+      do:
+        Repo.one(
+          from(b in Board,
+            where: b.code == ^normalized or b.room_code == ^normalized,
+            select: b.code
+          )
+        )
+  end
+
+  def resolve_code(_), do: nil
+
+  def request(raw, actor, label) do
+    case resolve_code(raw) do
+      nil -> {:error, :unavailable}
+      code -> request_board(code, actor, label)
+    end
+  end
+
+  defp request_board(code, actor, label) do
     result =
       Repo.transaction(fn ->
         board = lock!(code)

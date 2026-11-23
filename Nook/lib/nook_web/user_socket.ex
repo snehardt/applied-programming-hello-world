@@ -143,6 +143,9 @@ defmodule NookWeb.BoardChannel do
       not visible or
         (is_binary(payload["color"]) and Regex.match?(~r/^#[0-9a-fA-F]{6}$/, payload["color"]) and
            is_integer(payload["width"]) and payload["width"] in 1..24 and
+           is_boolean(Map.get(payload, "linear", false)) and
+           is_number(Map.get(payload, "opacity", 1)) and Map.get(payload, "opacity", 1) > 0 and
+           Map.get(payload, "opacity", 1) <= 1 and
            is_list(points) and length(points) in 1..128 and
            Enum.all?(points, fn
              [x, y] ->
@@ -157,7 +160,7 @@ defmodule NookWeb.BoardChannel do
       broadcast_from!(
         socket,
         "drawing",
-        Map.merge(Map.take(payload, ~w(visible color width points)), %{
+        Map.merge(Map.take(payload, ~w(visible color width points linear opacity)), %{
           "id" => socket.assigns.visitor_id
         })
       )
@@ -201,8 +204,9 @@ defmodule NookWeb.BoardChannel do
 
   defp valid_preview?(%{"id" => id, "changes" => changes})
        when is_binary(id) and byte_size(id) in 1..64 and is_map(changes) do
-    map_size(changes) in 1..4 and
+    map_size(changes) in 1..5 and
       Enum.all?(changes, fn
+        {"rotation", v} -> is_number(v) and abs(v) <= 1_000_000_000
         {k, v} when k in ~w(x y) -> is_number(v) and abs(v) < 10_000_000
         {k, v} when k in ~w(w h) -> is_number(v) and v >= 50 and v <= 10_000
         _ -> false

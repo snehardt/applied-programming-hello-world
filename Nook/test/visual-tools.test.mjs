@@ -31,3 +31,12 @@ test('successive local covers expose all remaining overlapping layers without mu
  assert.deepEqual(overlappingItems(all,new Set(['cover','middle','bottom'])),[]);
  assert.equal(JSON.stringify(all),snapshot);
 });
+
+
+test('tool popovers prefer the right, then the left, then fit below on narrow screens',async()=>{
+ const {anchoredPanelPosition}=await import('../priv/static/assets/visual-tools.mjs');
+ assert.deepEqual(anchoredPanelPosition({left:64,right:568,top:84,bottom:138},{width:316,height:180},{width:1440,height:1000,top:76}),{x:578,y:88});
+ assert.deepEqual(anchoredPanelPosition({left:700,right:900,top:400,bottom:440},{width:300,height:200},{width:1000,height:800,top:76}),{x:390,y:400});
+ const mobile=anchoredPanelPosition({left:43,right:378,top:74,bottom:123},{width:358,height:120},{width:390,height:844,top:67});assert.deepEqual(mobile,{x:20,y:133});
+ const bottom=anchoredPanelPosition({left:12,right:300,top:730,bottom:760},{width:330,height:200},{width:390,height:844,top:67});assert.ok(bottom.y+200<=832);
+});

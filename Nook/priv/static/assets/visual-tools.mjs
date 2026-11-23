@@ -36,3 +36,12 @@ export function selectionBarPosition(box, size, viewport, obstacles=[]) {
  for(const y of [clampY(above),...obstacles.map(o=>clampY(o.y+o.h+gap)),clampY(below)])if(clear(x,y))return {x,y};
  return {x,y:clampY(above)};
 }
+
+export function anchoredPanelPosition(anchor,size,viewport){
+ const margin=12,gap=10,minY=(viewport.top||0)+margin,right=(anchor.right??anchor.left+(anchor.width||0))+gap,left=anchor.left-size.width-gap;
+ const clampY=y=>Math.max(minY,Math.min(viewport.height-size.height-margin,y));
+ if(right+size.width<=viewport.width-margin)return {x:right,y:clampY(anchor.top)};
+ if(left>=margin)return {x:left,y:clampY(anchor.top)};
+ const x=Math.max(margin,Math.min(viewport.width-size.width-margin,anchor.left)),below=anchor.bottom+gap,above=anchor.top-size.height-gap;
+ return {x,y:below+size.height<=viewport.height-margin?below:above>=minY?above:clampY(below)};
+}

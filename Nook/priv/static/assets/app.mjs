@@ -1,8 +1,10 @@
-import {BoardHistory,actionLabel,guardedHistoryPlan} from './history.mjs';
+import {installStudioSettings} from './studio-settings.mjs?v=0.12.2';
+import {openRecoveryStore} from './recovery-store.mjs?v=0.12.2';
+import {BoardHistory,actionLabel,guardedHistoryPlan} from './history.mjs?v=0.12.2';
 import {saveState,loadFailure} from './ui-state.mjs';
-import {createCanvasUI} from './canvas-ui.mjs?v=0.10.1';
+import {createCanvasUI} from './canvas-ui.mjs?v=0.12.2';
 import {Socket, Presence} from './phoenix.mjs';
-import {prepareOperation, optimisticBoard, wireOperation, resolveConflict, describeElement, openDraftStore} from './collaboration-model.mjs';
+import {prepareOperation, optimisticBoard, wireOperation, resolveConflict, describeElement} from './collaboration-model.mjs';
 import {uid, applyOperation} from './canvas-model.mjs';
 export function mountNook(hook) {
 const $ = s => hook.el.querySelector(s);
@@ -32,9 +34,9 @@ const canvas = $('#canvas'), elements = $('#elements');
 
 function toast(message) { $('#toast').textContent = message; $('#toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').hidden = true, 4200); }
 function status() { for(const direction of ['undo','redo']){const button=$(`#${direction}`);button.disabled=!board||conflict||!history[direction].length;button.title=conflict?'Review the conflicting change first':history[direction].length?`${direction==='undo'?'Undo':'Redo'} ${history[direction].at(-1).label}`:`Nothing to ${direction}`;}saveHistory();if(historyRequest&&(!pending.length||!ready)&&!conflict){const request=historyRequest;historyRequest=null;queueMicrotask(()=>requestHistory(request));}const state=saveState({ready,pending:pending.length,editing:ui?.isEditing(),conflict});const label=$('#save-status');if(label.textContent!==state.text)label.textContent=state.text;label.dataset.state=state.kind;$('#connection-notice').hidden=ready||!board; if($('#claim-board'))$('#claim-board').disabled=pending.length>0; }
-function saveHistory(){if(!board||savedHistoryRevision===history.revision)return;savedHistoryRevision=history.revision;try{sessionStorage.setItem(`nook-history:${board.code}`,history.serialize());}catch{try{sessionStorage.removeItem(`nook-history:${board.code}`);}catch{}historyNotice('Undo history could not be kept through refresh on this device. Your board still saves normally.');}}
+function saveHistory(){if(!board||!draftStore||savedHistoryRevision===history.revision)return;savedHistoryRevision=history.revision;try{Promise.resolve(draftStore.saveHistory(history.serialize())).catch(()=>historyNotice('Undo history could not be kept through refresh on this device. Your board still saves normally.'));}catch{historyNotice('Undo history could not be kept through refresh on this device. Your board still saves normally.');}}
 function historyNotice(message){if($('#history-feedback').textContent!==message)$('#history-feedback').textContent=message;$('#history-notice').hidden=!message;}
-function backup() { try { draftStore?.save(pending); } catch { toast('Device backup is full. Keep this tab open until changes save.'); } }
+function backup() { try { Promise.resolve(draftStore?.save(pending)).catch(()=>toast('Device backup is full. Keep this tab open until changes save.')); } catch { toast('Device backup is full. Keep this tab open until changes save.'); } }
 function rebuild() { board=optimisticBoard(serverBoard,pending); render(); status(); }
 function commit(op, original) { const before={...board,elements:{...board.elements}};op=prepareOperation(op,original || board.elements[op.id || op.element?.id]);op.op_id ||= uid();pending.push(op);const children=op.type==='batch'?op.ops:[op];for(const child of children)if(child.recovery_element)before.elements[child.id||child.element?.id]=child.recovery_element;applyOperation(board,op);if(!replayingHistory){historyNotice('');historyRequest=null;const affected=new Set(children.map(child=>child.id||child.element?.id));for(const child of children)if(child.type==='delete')for(const element of Object.values(before.elements))if(element.from===child.id||element.to===child.id)affected.add(element.id);history.record(before,board,actionLabel(op),affected);}backup();render();status();flush(); }
 function acceptSnapshot(snapshot) {
@@ -43,7 +45,7 @@ function acceptSnapshot(snapshot) {
 }
 function preserveRemovedDrafts(snapshot){ui?.preserveDrafts(snapshot);}
 function prepareBatch(ops,originals){return {type:'batch',ops:ops.map(op=>prepareOperation(op,originals?.get(op.id)||board.elements[op.id||op.element?.id]))};}
-function commitBatch(ops,originals,historyGuard){if(!ops.length)return false;const batch=prepareBatch(ops,originals);if(historyGuard)batch.history_guard=historyGuard;if(new Blob([JSON.stringify(wireOperation(batch))]).size>1_450_000){toast('This selection is too large to save at once. Try a smaller selection.');return false;}commit(batch);return true;}
+function commitBatch(ops,originals,historyGuard){if(!ops.length)return false;const batch=prepareBatch(ops,originals);if(historyGuard)batch.history_guard=historyGuard;if(new Blob([JSON.stringify(wireOperation(batch))]).size>12_000_000){toast('This selection is too large to save at once. Try a smaller selection.');return false;}commit(batch);return true;}
 function conflictDescription(snapshot,ops){return ops.map((op,index)=>{const id=op.id||op.element?.id;return `${index+1}. ${describeElement(snapshot.elements[id])}`;}).join('\n\nâ”€â”€â”€â”€â”€â”€â”€â”€\n\n');}
 function showConflict(snapshot, reason='conflict') {
   conflict=true;sending=false;history.clear();historyRequest=null;
@@ -63,6 +65,7 @@ $('#conflict-dialog').oncancel=e=>e.preventDefault();
 function flush() {
   if (!ready || sending || conflict || !pending.length || Date.now()<retrySaveAt) return;
   sending = true;
+  if(serverBoard.recent_operations?.includes(pending[0].op_id)){pending.shift();sending=false;backup();rebuild();flush();return;}
   if(pending[0].history_guard){const operation=pending[0],plan=guardedHistoryPlan(serverBoard,operation.history_guard);if(plan.error){sending=false;historyNotice(plan.error);showConflict(serverBoard,'history_blocked');return;}if(!plan.ops.length){pending.shift();sending=false;backup();rebuild();flush();return;}const prepared={type:'batch',ops:plan.ops.map(op=>prepareOperation(op,serverBoard.elements[op.id||op.element?.id]))};pending[0]={...prepared,op_id:operation.op_id,history_guard:operation.history_guard};backup();}
   const operation=pending[0],activeChannel=channel;
   channel.push('operation',wireOperation(operation),15000).receive('ok', ({snapshot}) => {
@@ -79,22 +82,29 @@ function flush() {
 $('#join-open').onclick = () => $('#join-dialog').showModal();
 $('#close-join').onclick = () => $('#join-dialog').close();
 hook.handleEvent('nook:toast',({message})=>{if($('#join-dialog').open)$('#join-error').textContent=message;else toast(message);});
-function share() { refreshRequests();$('#room-open').checked=!!board.room_open;$('#room-owner-controls').hidden=!board.can_manage; $('#room-code').value = board.code; $('#copy-link').disabled=!$('#room-link').value; $('#room-dialog').showModal(); }
-async function copyInvitation(){const button=$('#quick-copy-invite');button.disabled=true;try{const r=await fetch(`/api/boards/${board.code}/invitations/reuse`,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':document.querySelector('meta[name=csrf-token]').content},body:'{}'});const result=await r.json();if(!r.ok)throw Error(result.error||'Could not create an invitation. Try again.');const link=`${location.origin}${result.path}`;$('#room-link').value=link;$('#quick-invite-link').value=link;$('#quick-invite-link').hidden=false;$('#invite-link-label').hidden=false;try{await navigator.clipboard.writeText(link);$('#invite-feedback').textContent='Invitation link copied. Send it to someone you want to invite.';}catch{$('#quick-invite-link').select();$('#invite-feedback').textContent='Select and copy the link below.';}}catch(error){$('#invite-feedback').textContent=error.message;}finally{button.disabled=false;}}
-$('#quick-copy-invite').onclick=copyInvitation;
-$('#more-sharing').onclick=()=>{$('#invite-dialog').close();share();$('#advanced-sharing').open=true;};
+let inviteRequest=null,selfParticipantId;
+function roomFeedback(message){$('#invite-feedback').textContent=message;$('#invite-feedback').hidden=!message;}
+async function prepareInvitation(){
+  if(!board?.can_manage)return;
+  if(inviteRequest)return inviteRequest;
+  $('#copy-link').disabled=true;$('#room-link').placeholder='Preparing your link…';
+  inviteRequest=(async()=>{try{const result=await api(`/api/boards/${board.code}/invitations/reuse`,{});$('#room-link').value=`${location.origin}${result.path}`;$('#copy-link').disabled=false;}catch{$('#room-link').placeholder='Link unavailable';roomFeedback('Could not prepare the link. Reopen this room to try again.');}finally{inviteRequest=null;}})();
+  return inviteRequest;
+}
+function share(){if(!board)return;$('#name-form').hidden=true;refreshRequests();roomFeedback('');$('#room-open').checked=!!board.room_open;$('#room-owner-controls').hidden=!board.can_manage;$('#advanced-sharing').hidden=!board.can_manage;$('#room-code').value=board.room_code||board.code;$('#room-link').placeholder=board.can_manage?'Preparing your link…':'Ask the owner for an invitation link';$('#copy-link').disabled=!$('#room-link').value;if(!$('#room-dialog').open)$('#room-dialog').showModal();if(board.can_manage)prepareInvitation();}
 let sharingAction;
 for(const [selector,action,title]of [['#create-invite','create_invite','Replace this invitation?'],['#disable-sharing','disable_sharing','Disable sharing?']])if($(selector))$(selector).onclick=()=>{sharingAction=action;$('#sharing-confirm-title').textContent=title;$('#sharing-confirm-dialog').showModal();};
 $('#sharing-cancel').onclick=()=>$('#sharing-confirm-dialog').close();
 $('#sharing-confirm').onclick=()=>{$('#sharing-confirm-dialog').close();hook.pushEvent(sharingAction,{});};
-hook.handleEvent('nook:invite',({path})=>{$('#room-link').value=path?`${location.origin}${path}`:'';$('#quick-invite-link').value=$('#room-link').value;$('#copy-link').disabled=!path;toast(path?'Invitation replaced. Previous guests need the new link.':'Sharing disabled. Previous invitations no longer work.');});
+hook.handleEvent('nook:invite',({path})=>{$('#room-link').value=path?`${location.origin}${path}`:'';$('#copy-link').disabled=!path;toast(path?'Invitation replaced. Previous guests need the new link.':'Sharing disabled. Previous invitations no longer work.');});
 for (const [button, input] of [['#copy-code','#room-code'],['#copy-link','#room-link']]) $(button).onclick = async () => {
   try { await navigator.clipboard.writeText($(input).value); const text = $(button).textContent; $(button).textContent='Copied!'; setTimeout(() => $(button).textContent=text,1400); } catch { $(input).select(); toast('Select and copy the highlighted text.'); }
 };
-$('#share-button').onclick = ()=>{if(!board?.can_manage){toast('Ask the owner for an invitation link.');return;}$('#invite-dialog').showModal();};
+$('#share-button').onclick=share;
 $('#help').onclick = () => $('#help-dialog').showModal();
 $('#retry-load').onclick=()=>location.reload();
 ui=createCanvasUI({beginAction:label=>history.begin(label),endAction:()=>{history.end();status();},requestHistory,root:hook.el,getBoard:()=>board,commit,commitBatch,send:(event,payload)=>{if(ready)channel.push(event,payload);},toast,openRoom:share,tools,icons,onDirty:status});
+const studioSettings=installStudioSettings(hook.el);
 function requestHistory(direction){ui.finishEditing();if(conflict){historyNotice('Review the conflicting change before using Undo or Redo.');return;}if(ready&&pending.length){historyRequest=direction;historyNotice('Waiting for your last change to saveâ€¦');return;}const plan=history.plan(board,direction);if(plan.error){historyNotice(plan.error);return;}if(!plan.ops.length)return;const {group,...entry}=plan.entry;const guard={direction,entry:structuredClone(entry)};replayingHistory=true;try{if(commitBatch(plan.ops,undefined,guard)!==false){history.accept(direction,plan);historyNotice(ready?'':`${direction==='undo'?'Undone':'Redone'} on this device. It will sync when you reconnect.`);}}finally{replayingHistory=false;status();}}
 $('#history-dismiss').onclick=()=>historyNotice('');
 for(const direction of ['undo','redo']){$(`#${direction}`).onpointerdown=e=>e.preventDefault();$(`#${direction}`).onclick=()=>requestHistory(direction);}
@@ -102,12 +112,12 @@ function render(){ui.render();}
 function transform(){ui.transform();}
 listen(window,'beforeunload',e=>{ui.finishEditing();if(pending.length){e.preventDefault();e.returnValue='';}});
 async function start(){
-  const code=location.pathname.match(/^\/b\/([A-Z2-7]{13})\/?$/)?.[1];if(!location.pathname.startsWith('/b/'))return;
+  const code=location.pathname.match(/^\/b\/([A-Z2-7]{12,13})\/?$/)?.[1];if(!location.pathname.startsWith('/b/'))return;
   $('#landing').hidden=true;$('#workspace').hidden=false;$('#board-load-state').hidden=false;canvas.inert=true;$('#toolbar').inert=true;$('#share-button').disabled=true;$('#collaborators').disabled=true;
   if(!code){showLoadFailure(404);return;}
   try{
     const r=await fetch(`/api/boards/${code}`,{signal:AbortSignal.timeout(15000)});if(!r.ok){showLoadFailure(r.status);return;}serverBoard=await r.json();board=structuredClone(serverBoard);
-    try{draftStore=openDraftStore(code,localStorage,sessionStorage,uid(),performance.getEntriesByType('navigation')[0]?.type);pending=draftStore.pending;history.restore(sessionStorage.getItem(`nook-history:${code}`));}catch{pending=[];toast('Device backup is unavailable. Keep this tab open until changes save.');}
+    try{draftStore=await openRecoveryStore(code,uid(),performance.getEntriesByType('navigation')[0]?.type);pending=draftStore.pending;history.restore(draftStore.history);}catch{pending=[];toast('Device backup is unavailable. Keep this tab open until changes save.');}
     pending.forEach(op=>applyOperation(board,op));$('#board-load-state').hidden=true;canvas.inert=false;$('#toolbar').inert=false;$('#share-button').disabled=false;$('#collaborators').disabled=false;render();transform();
     rememberBoard(board);$('#board-title').readOnly=!board.can_manage;
     socket=new Socket('/socket',{params:{_csrf_token:document.querySelector('meta[name=csrf-token]').content}});socket.connect();channel=socket.channel(`board:${code}`,()=>({name:localStorage.getItem('nook-name')||''}));
@@ -121,7 +131,7 @@ async function start(){
     channel.on('presence_state',state=>{presence=Presence.syncState(presence,state);updatePresence();});
     channel.on('presence_diff',diff=>{presence=Presence.syncDiff(presence,diff);updatePresence();});
     const joined=channel.join();
-    joined.receive('ok',snapshot=>{ui.setSelfCursor(snapshot.cursor_id);ready=true;sending=false;acceptSnapshot(snapshot);$('#participant-name').value=snapshot.self?.name||'';refreshRequests();status();flush();});
+    joined.receive('ok',snapshot=>{ui.setSelfCursor(snapshot.cursor_id);ready=true;sending=false;acceptSnapshot(snapshot);selfParticipantId=snapshot.self?.id;$('#participant-name').value=snapshot.self?.name||'';updatePresence();refreshRequests();status();flush();});
     joined.receive('error',()=>{ready=false;status();toast('Could not reconnect. Your drafts stay on this device. Try reloading.');refreshAccess();});
     joined.receive('timeout',()=>{ready=false;status();});
     channel.onClose(()=>{ready=false;sending=false;status();});
@@ -132,18 +142,18 @@ function showLoadFailure(code){const failure=loadFailure(code);$('#board-load-st
 function updatePresence(){
   ui.syncPresence(presence);
   $('#collaborators').textContent=`${Object.keys(presence).length} here`;
-  $('#participants').replaceChildren();
+  $('#participants').replaceChildren();$('#room-people-count').textContent=String(Object.keys(presence).length);
   for(const {metas} of Object.values(presence)){
     const profile=metas.at(-1),row=document.createElement('li'),dot=document.createElement('span');
-    dot.className=`participant-dot ${profile.color}`;row.append(dot,document.createTextNode(`${profile.name} Â· ${profile.role}${metas.length>1?` Â· ${metas.length} tabs`:''}`));$('#participants').append(row);
+    dot.className=`participant-dot ${profile.color}`;dot.textContent=profile.name.trim().charAt(0).toUpperCase();dot.setAttribute('aria-hidden','true');const name=document.createElement('span');name.className='participant-name';name.textContent=profile.name;const role=document.createElement('small');role.className='participant-role';role.textContent=profile.id===selfParticipantId?'You':profile.role;row.append(dot,name,role);if(profile.id===selfParticipantId){const edit=document.createElement('button');edit.type='button';edit.className='participant-edit';edit.setAttribute('aria-label','Edit your name');edit.title='Edit your name';edit.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m5 16-1 4 4-1L20 7l-3-3Zm10-10 3 3"/></svg>';edit.onclick=()=>{$('#name-form').hidden=!$('#name-form').hidden;if(!$('#name-form').hidden){$('#participant-name').focus();$('#participant-name').select();}};row.append(edit);}$('#participants').append(row);
   }
 }
 $('#collaborators').onclick=share;
-$('#name-form').onsubmit=e=>{e.preventDefault();const name=$('#participant-name').value.trim();channel.push('set_name',{name}).receive('ok',profile=>{localStorage.setItem('nook-name',profile.name);$('#participant-name').value=profile.name;toast('Your name is updated.');});};
+$('#name-form').onsubmit=e=>{e.preventDefault();const name=$('#participant-name').value.trim();channel.push('set_name',{name}).receive('ok',profile=>{try{localStorage.setItem('nook-name',profile.name);}catch{}$('#participant-name').value=profile.name;$('#name-form').hidden=true;roomFeedback('Name updated.');});};
 async function api(path,body){const r=await fetch(path,{method:body?'POST':'GET',headers:{'content-type':'application/json','x-csrf-token':document.querySelector('meta[name=csrf-token]').content},...(body?{body:JSON.stringify(body)}:{})});if(!r.ok)throw Error('unavailable');return r.json();}
 async function refreshRequests(){
-  if(!board?.can_manage)return;
-  try{const requests=await api(`/api/boards/${board.code}/requests`);$('#requests').replaceChildren();$('#request-count').textContent=requests.length?`${requests.length} waiting`:'';if(!requests.length){const empty=document.createElement('li');empty.textContent='No one is waiting right now.';$('#requests').append(empty);}
+  if(!board?.can_manage){$('#room-requests').hidden=true;return;}
+  try{const requests=await api(`/api/boards/${board.code}/requests`);$('#requests').replaceChildren();$('#request-count').textContent=requests.length?`${requests.length} waiting`:'';$('#room-requests').hidden=!requests.length;
     for(const request of requests){const row=document.createElement('li'),name=document.createElement('span');name.textContent=request.name;row.append(name);for(const [label,decision]of [['Admit','approved'],['Decline','denied']]){const b=document.createElement('button');b.className=decision==='approved'?'primary':'secondary';b.textContent=label;b.onclick=async()=>{try{await api(`/api/boards/${board.code}/requests/${request.id}`,{decision});refreshRequests();}catch{toast('This request is no longer available.');refreshRequests();}};row.append(b);}$('#requests').append(row);}
   }catch{/* Access changes are handled by the board channel. */}
 }
@@ -155,11 +165,25 @@ function waitForAdmission(request){
 hook.handleEvent('nook:admission',request=>{localStorage.setItem('nook-name',$('#join-name').value.trim());waitForAdmission(request);});
 const waiting=sessionStorage.getItem('nook-admission');if(waiting&&!location.pathname.startsWith('/b/')){$('#join-dialog').showModal();waitForAdmission({id:waiting});}
 async function refreshSnapshot(){try{const snapshot=await api(`/api/boards/${board.code}`);acceptSnapshot(snapshot);}catch{refreshAccess();}}
-function loseAccess(message){ready=false;$('#connection-notice').hidden=true;$('#board-load-state').hidden=true;ui.resetCursors();$('#conflict-dialog').close();$('#room-dialog').close();$('#invite-dialog').close();$('#sharing-confirm-dialog').close();canvas.inert=true;$('#toolbar').inert=true;$('#selection-bar').hidden=true;$('#access-message').hidden=false;$('#access-reason').textContent=message;elements.replaceChildren();$('#connections').replaceChildren();$('#save-status').textContent='Access unavailable';channel?.leave();}
-async function refreshAccess(){try{const r=await fetch(`/api/boards/${board.code}`);if(r.status===404){loseAccess('This board expired, was deleted, or your permission changed. Sign in or ask its owner for a new invitation.');return;}if(r.ok){const info=await r.json();for(const key of ['kind','can_manage','can_claim','sharing_enabled','sharing_active','room_open','expires_at'])board[key]=serverBoard[key]=info[key];$('#room-open').checked=!!board.room_open;$('#board-title').readOnly=!board.can_manage;const label=$('.board-lifecycle>span');if(label&&board.kind==='permanent')label.textContent=`Permanent board Â· ${board.sharing_active?'shared with guests':'private'}`;}}catch{/* A network interruption keeps unsaved operations queued. */}}
+function loseAccess(message){ready=false;$('#connection-notice').hidden=true;$('#board-load-state').hidden=true;ui.resetCursors();$('#conflict-dialog').close();$('#room-dialog').close();$('#sharing-confirm-dialog').close();canvas.inert=true;$('#toolbar').inert=true;$('#selection-bar').hidden=true;$('#access-message').hidden=false;$('#access-reason').textContent=message;elements.replaceChildren();$('#connections').replaceChildren();$('#save-status').textContent='Access unavailable';channel?.leave();}
+async function refreshAccess(){try{const r=await fetch(`/api/boards/${board.code}`);if(r.status===404){loseAccess('This board expired, was deleted, or your permission changed. Sign in or ask its owner for a new invitation.');return;}if(r.ok){const info=await r.json();for(const key of ['kind','can_manage','can_claim','sharing_enabled','sharing_active','room_open','expires_at'])board[key]=serverBoard[key]=info[key];$('#room-open').checked=!!board.room_open;$('#board-title').readOnly=!board.can_manage;const label=$('.board-lifecycle>span');if(label&&board.kind==='permanent')label.textContent=`Saved board Â· ${board.sharing_active?'shared with guests':'private'}`;}}catch{/* A network interruption keeps unsaved operations queued. */}}
 function rememberBoard(info){if(!info?.code)return;try{let list=JSON.parse(localStorage.getItem('nook-recent-boards')||'[]');if(!Array.isArray(list))list=[];list=[{code:info.code,title:info.title||'Untitled board',kind:info.kind,expires_at:info.expires_at,opened:Date.now()},...list.filter(item=>item.code!==info.code)].slice(0,12);localStorage.setItem('nook-recent-boards',JSON.stringify(list));}catch{/* Browsing stays possible with storage disabled. */}}
-function showRecentBoards(){try{const list=JSON.parse(localStorage.getItem('nook-recent-boards')||'[]');if(!Array.isArray(list)||!list.length)return;$('#recent-boards').hidden=false;for(const item of list.slice(0,12)){if(!/^[A-Z2-7]{13}$/.test(item.code))continue;const li=document.createElement('li'),a=document.createElement('a'),small=document.createElement('small');a.href=`/b/${item.code}`;a.textContent=item.title||'Untitled board';small.textContent=item.kind==='permanent'?'Permanent board':item.expires_at&&Date.parse(item.expires_at)<Date.now()?'Temporary board Â· may have expired':'Temporary board';li.append(a,small);$('#recent-list').append(li);}}catch{/* No recents when storage is unavailable. */}}
+function showRecentBoards(){try{
+  const list=JSON.parse(localStorage.getItem('nook-recent-boards')||'[]');if(!Array.isArray(list))return;
+  const valid=list.slice(0,12).filter(item=>item&&/^[A-Z2-7]{12,13}$/.test(item.code));if(!valid.length)return;
+  $('#recent-boards').hidden=false;$('#recent-list').replaceChildren();
+  const today=new Date();today.setHours(0,0,0,0);const yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
+  for(const item of valid){
+    const li=document.createElement('li'),link=document.createElement('a'),thumb=document.createElement('span'),label=document.createElement('div'),title=document.createElement('strong'),meta=document.createElement('p');
+    link.className='recent-item';link.href=`/b/${item.code}`;thumb.className='thumb';thumb.setAttribute('aria-hidden','true');
+    thumb.innerHTML='<svg viewBox="0 0 80 48"><rect x="4" y="9" width="27" height="31" fill="#e9dcf5" stroke="none"/><path d="M9 18h16M9 24h12M9 30h13M35 24h17m-5-4 5 4-5 4"/><ellipse cx="66" cy="22" rx="11" ry="8"/></svg>';
+    title.textContent=item.title||'Untitled board';const opened=new Date(item.opened),validDate=Number.isFinite(opened.getTime());
+    meta.textContent=item.expires_at&&Date.parse(item.expires_at)<Date.now()?'May have expired':validDate?(opened>=today?'Opened today':opened>=yesterday?'Opened yesterday':`Opened ${opened.toLocaleDateString(undefined,{month:'short',day:'numeric'})}`):item.kind==='permanent'?'Saved board':'Quick board';
+    label.append(title,meta);link.append(thumb,label);li.append(link);$('#recent-list').append(li);
+  }
+}catch{/* Opening the home page does not require device storage. */}}
+
 if(!location.pathname.startsWith('/b/'))showRecentBoards();
 start();
-return () => { ui.dispose();lifecycle.abort();clearTimeout(admissionTimer);clearTimeout(retrySaveTimer);socket?.disconnect(); clearTimeout(toastTimer); };
+return () => { studioSettings.dispose();ui.dispose();draftStore?.close?.();lifecycle.abort();clearTimeout(admissionTimer);clearTimeout(retrySaveTimer);socket?.disconnect(); clearTimeout(toastTimer); };
 }

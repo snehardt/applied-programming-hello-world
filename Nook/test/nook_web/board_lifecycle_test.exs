@@ -32,7 +32,7 @@ defmodule NookWeb.BoardLifecycleTest do
     actor = %{Access.new_guest() | user_token: Nook.Accounts.generate_user_session_token(user)}
     conn = browser(conn, actor)
     {:ok, view, _} = live(conn, "/dashboard")
-    view |> element("button", "New permanent board") |> render_click()
+    view |> element("button", "+ New board") |> render_click()
     {path, _} = assert_redirect(view)
     code = String.replace_prefix(path, "/b/", "")
     {:ok, board} = Boards.get(code, actor)

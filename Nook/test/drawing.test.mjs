@@ -13,7 +13,7 @@ test('dots and negative-coordinate strokes have padded selectable geometry',()=>
  assert.match(strokePath(stroke.points,stroke.w,stroke.h),/ Q /);
  assert.ok(stroke.points.every(p=>p.every(v=>v>=0&&v<=1)));
  assert.equal(makeStroke([{x:0,y:0},{x:10001,y:2}],'#210a3b',4,'big',1),null);
- assert.equal(makeStroke(Array.from({length:3000},(_,x)=>({x,y:0})),'#210a3b',1,'bounded',1).points.length,MAX_STROKE_POINTS);
+ assert.equal(makeStroke(Array.from({length:3000},(_,x)=>({x,y:0})),'#210a3b',1,'bounded',1).points.length,3000);
 });
 
 test('a completed stroke uses existing board operations without losing its point data',()=>{
@@ -32,4 +32,13 @@ test('simplifying removes redundant samples but keeps corners and one-stroke his
  history.begin('draw stroke');history.record(before,after);history.end();assert.equal(history.undo.length,1);
  const undo=history.plan(after,'undo');assert.equal(undo.ops.length,1);applyOperation(after,undo.ops[0]);history.accept('undo',undo);assert.deepEqual(after.elements,{});
  const redo=history.plan(after,'redo');applyOperation(after,redo.ops[0]);assert.deepEqual(after.elements.s.points,stroke.points);
+});
+
+test('long ink preserves all 100,000 samples without clipping or overflowing bounds calculation',()=>{
+ const samples=Array.from({length:100000},(_,i)=>({x:200+Math.sin(i/7)*100,y:200+Math.cos(i/11)*100}));
+ const el=makeStroke(samples,'#210a3b',4,'long',1);assert.equal(el.points.length,MAX_STROKE_POINTS);
+ for(const i of [0,2047,2048,50000,99999]){assert.ok(Math.abs(el.x+el.points[i][0]*el.w-samples[i].x)<1e-10);assert.ok(Math.abs(el.y+el.points[i][1]*el.h-samples[i].y)<1e-10);}
+ const board={elements:{}};applyOperation(board,{type:'put',element:el});
+ assert.equal(Object.keys(board.elements).length,1);assert.equal(strokePath(el.points,el.w,el.h,true).match(/ L /g).length,99999);
+ assert.equal(makeStroke([...samples,{x:0,y:0}],'#210a3b',4,'too-long',1),null);
 });

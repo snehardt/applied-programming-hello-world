@@ -7,5 +7,5 @@ try {
   Invoke-NookMix ecto.migrate
   Invoke-NookMix test
 } finally { $env:MIX_ENV = $nookPreviousMixEnv }
-node --test test/canvas-model.test.mjs test/collaboration-model.test.mjs test/ui-state.test.mjs test/history.test.mjs test/file-policy.test.mjs test/visual-tools.test.mjs test/drawing.test.mjs test/drawing-assist.test.mjs
+node --test test/canvas-model.test.mjs test/collaboration-model.test.mjs test/ui-state.test.mjs test/history.test.mjs test/file-policy.test.mjs test/visual-tools.test.mjs test/drawing.test.mjs test/drawing-assist.test.mjs test/rotation.test.mjs test/ink-editing.test.mjs test/connection-routing.test.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Canvas tests failed.' }

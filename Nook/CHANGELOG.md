@@ -1,3 +1,100 @@
+# 0.12.2 — Final usability polish (November 19, 2026)
+
+- Task text fields use a text cursor throughout their editable area, including empty rows and space after words. Clicking or dragging within a text field selects text; card edges still move the card. Hand mode shows a grab cursor and keeps fields read-only.
+- New rounded/rectangular shapes start at 220 × 120 and tasks at 300 × 140. New circles remain square at 150 × 150; triangles and diamonds keep extra label room. Existing saved dimensions are unchanged, and tasks continue growing as content is added.
+- Increased contrast of secondary labels, task placeholders and tool icons within the same Quiet Studio palette. Sampled small labels have 5.73:1 contrast on the paper background; task placeholders have 5.48:1. Touch feedback now uses lavender instead of the browser's blue highlight.
+- Coarse-pointer creation tools, Select, Hand and Settings have 44px targets while artwork retains its size. Color/icon popovers fit beside the wider rail on phones. Enlarged touch targets for zoom, name editing and settings tabs.
+- Verification: 184 backend and 81 JavaScript tests passed. Browser checks covered empty/trailing-space text cursors, text selection without movement, keyboard creation and undo/redo, growing checklists, resized-card persistence, circle geometry, Hand/Select cursor modes, touch portrait/landscape layouts, connections, rotation, unchanged ink, uploads and invitation-based sharing. No browser exceptions.
+
+# 0.12.1 — Approved welcome screen (November 19, 2026)
+
+- Applied the approved welcome layout: plum header, Welcome to Nook heading, New whiteboard and Join a room actions, and the illustrated whiteboard with notes and drawings. Preserved existing account navigation and settings.
+- Recent boards use real browser history with safe titles, working board links, and opened dates. The section appears only when valid recent boards exist; no example boards are inserted into history.
+- Scoped the welcome styles to the landing page and retained the approved responsive phone layout.
+- Verification: 184 backend and 81 JavaScript tests passed. Browser checks covered board creation, joining, settings, real recents, reopening a recent board, and a 390px viewport without horizontal overflow. No browser exceptions.
+
+# 0.12.0 — Quiet Studio (November 18, 2026)
+
+- Unified login, registration, account settings, board lists, room dialogs, popovers and canvas controls around a restrained plum-and-cream studio style. Replaced promotional landing copy with a practical Boards menu, and board-card grids with simple rows and tucked-away actions.
+- Moved creation tools into a slim left rail, with Select above, Hand and Settings below, and zoom controls at bottom left. Small icons retain accessible names and tooltips. Popovers open beside the relevant tool and stay within smaller viewports.
+- Added a shared settings sheet for General, Drawing and Navigation. Drawing includes a live ink preview, pen color, brush size, touch and smoothing controls; changes apply to the active pen and existing saved preferences. Kept raw strokes and smoothing off by default.
+- Room invitations use a compact side sheet with a short code, link, participant initials and a pencil to edit your name. Advanced room controls remain collapsed.
+- Verification: 184 backend tests and 81 JavaScript tests passed. Browser checks covered pen-preview settings applying to actual ink, saved navigation preferences, rail and popover placement, and desktop and 390px layouts. Existing authentication and board lifecycle tests pass with the new labels.
+
+# 0.11.9 — Continuous ink and separate file storage (November 18, 2026)
+
+- Removed the 2,048-point interruption and separate 500-stroke cap. A gesture can use the board's remaining 100,000-point allowance as one selectable, movable, rotatable, erasable and undoable stroke. Raw samples are preserved; drawing previews update once per animation frame. The existing 10,000-unit size and 2,000-object board safeguards remain.
+- Files now upload separately into private, board-scoped PostgreSQL attachment rows. Board snapshots, edits and new history entries contain references rather than file bytes. Reopening a board restores pictures automatically. Larger static images have lightweight previews; original downloads remain unchanged under More options. GIF previews preserve animation.
+- Increased uploads to 10 MB per file, with a configurable 100 MB storage allowance per board (including retained originals/previews). Identical uploads are stored once per board. Originals are retained for undo/replacement and inherit board access, expiry, revocation and deletion rules; permanent board removal cascades storage cleanup.
+- Existing inline uploads convert safely on first load without changing IDs, layout or element revisions. Conversion is idempotent. No new hosting service or account is required.
+- Moved large drawing recovery and same-tab undo history to IndexedDB, with legacy draft/history import and per-tab isolation. Retried history operations already acknowledged by the server are recognized after refresh.
+- Verification: 184 backend tests and 81 JavaScript tests passed. Browser checks covered a full 100,000-point stroke through the actual socket, unchanged preview/saved paths, rotation to 810 degrees, undo/redo across refresh and connection loss, a 2.8 MB image upload with a 653 KB preview, original download equality, automatic picture reload, and file replacement undo/redo. No browser exceptions.
+
+# 0.11.8 — A simpler room invitation screen (November 16, 2026)
+
+- Invite, Room, and the people count now open one compact room dialog with a six-character room code, a ready-to-copy invitation link, live participant names, and your display-name editor. Removed the separate invitation dialog and duplicate sharing paths.
+- Code admission has a small owner-only Allow requests toggle. Waiting requests appear only when present. Invitation replacement/revocation remain inside collapsed Room settings.
+- Added unique short-code aliases and backfilled existing boards without changing board identifiers, saved content, or invitation tokens. Codes accept lowercase and optional spaces/hyphens; admission still requires owner approval. Existing long codes remain accepted, including older 12-character board URLs in the client.
+- Verification: 79 JavaScript tests and all 176 backend tests passed, along with compilation, formatting, production release build, and Google-auth production boot checks. Live multi-browser checks covered short-code admission and approval, direct invitation joining, live name updates, a single room screen, stable code/link/name after reload, and a 390px layout without overflow. Browser error logs were empty.
+- Source backup: .nook-history/before-simple-room.zip. Database backup was saved before migration. Local preview remains on port 4000; nothing published.
+
+# 0.11.7 — Flowing drag connections and quieter selection (November 16, 2026)
+
+- Connect uses one press-drag-release gesture between eligible objects. Separate clicks or release on empty canvas create no connection. Removed object port circles and fixed-side attachment from new connections.
+- Connections approach targets from any angle with a directional arrow. Obstacle detours use broad tangent-continuous bends and dynamic attachment points. An 18px invisible hit stroke makes lines easier to select; dragging near either end onto an eligible object reconnects it without endpoint circles.
+- Applied the selected highlighting preference: one outline per object, shapes highlight their own geometry without a rectangular/text outline, and multiple selections use one shared frame. Task remove/reorder controls appear on row hover or keyboard focus; the add action appears while working in the card. Removed the redundant task insertion zone.
+- Verification: 79 JavaScript tests, compilation, syntax and formatting checks passed. Live-board checks confirmed drag-only connections, rejection of empty releases/separate clicks, selection 7px off the line, endpoint reattachment and reload persistence, no connection circles, shape/text outline rules, shared multi-selection bounds, and task controls appearing/hiding with hover and focus. Browser error logs were empty.
+- Source backup: .nook-history/before-flowing-connections.zip. Local preview remains on port 4000.
+
+# 0.11.6 — Direct rotation circle (November 16, 2026)
+
+- Selected unlocked items/groups show their rotation circle immediately. Removed the separate Rotate button from selection actions.
+- Clicking or grabbing the circle opens angle options beside it; Done or Escape hides those options while keeping the circle available. Selecting something else resets the options. Enter/Space on the circle opens the angle input for keyboard users.
+- Verification: 76 JavaScript tests and compilation passed. Live-board checks confirmed circle visible/options hidden on selection, no Rotate button, click/numeric rotation, two full drag turns, Escape, keyboard entry, Done retaining the circle, and deselection hiding controls. Browser error logs were empty.
+- Source backup: .nook-history/before-direct-rotation-handle.zip. Local preview remains on port 4000.
+
+# 0.11.5 — Rotation across canvas items and ink connection rules (November 16, 2026)
+
+- Rotation handles and pivots follow visible text instead of the larger text layout box, making plain text easier to grab and keeping its visible center in place while turning. Rotate remains explicit for all canvas objects and groups.
+- Drawings cannot start or receive connections, even when grouped. Both UI targets and board validation enforce this. Lasso selection and drawing rotation remain available; existing saved content is retained.
+- Verification: 76 JavaScript tests and 16 focused board/channel tests passed. Live-board checks rotated text, notes, shapes, tasks, icons, pictures, documents, drawings, and a combined group beyond 360 degrees; confirmed lasso selection, no stroke connection targets, a helpful rejected-connection message, and saved rotation after reload. No browser errors.
+- Source backup: .nook-history/before-rotate-all-no-drawing-connections.zip. Local preview remains on port 4000.
+
+# 0.11.4 — Side popovers and clean image cards (November 16, 2026)
+
+- Popovers prefer the right of their toolbar or selection controls, with left/below fallbacks when screen space is limited. Drawing, color, shape, and More panels have more room; icon artwork stays 30px and the eight-icon picker no longer has search.
+- Images display as pictures without download text, borders, or captions. Other uploaded files show a document symbol and filename. Download file appears only for a selected file/image under More options and preserves its original filename.
+- Clipboard image paste adds an image directly to the canvas in one undoable action, using the existing supported-file and size checks. Image paste while editing canvas text preserves the words. Images fit their natural aspect ratio within practical initial dimensions.
+- Verification: 76 JavaScript tests passed, plus compilation, syntax and formatting checks. Live local-board browser checks verified right-hand positions, unchanged icon size, image clipboard events, image/document downloads with correct filenames, no inline links, file-only download controls, paste undo/redo, preservation of edited text, persistence after reload, and narrow-screen fallback without overflow. Browser error logs were empty.
+- Source backup: .nook-history/before-side-popovers-paste.zip. Local preview remains on port 4000; nothing published.
+
+# 0.11.3 — Quieter toolbars and contextual options (November 16, 2026)
+
+- Reduced the desktop creation toolbar from 96px to 54px high. Shape and icon choices open on click or ArrowDown rather than hover.
+- Drawing options open beside Draw and tuck away on canvas input without leaving the active ink tool. Clicking Draw reopens them. Default mobile drawing options fit in 84px.
+- Color menus dismiss on canvas/outside clicks. Tool and selection popovers stay near their buttons and within the viewport.
+- Compact selection actions show Rotate, Colors, Delete, and More options. Rotate reveals the handle and angle field; Done, Escape, or selecting something else closes them. Cleanup and Select underneath live under More options.
+- New connections require plain text to share a group with another canvas item. Both UI and board validation enforce this; existing content is retained.
+- Verification: 74 JavaScript tests and 15 focused board/channel integration tests passed, alongside compilation and formatting checks. Live local-board browser checks covered color dismissal, rotation/Done, drawing with options tucked away, grouped-text connections, reload, and a 390px layout without overflow. Browser error logs were empty.
+- Source backup: .nook-history/before-compact-tools.zip. Local preview runs on port 4000; nothing published.
+
+# 0.11.2 — Stable ink and drawing editing tools (November 16, 2026)
+
+- Freehand ink now keeps its sampled path after release. Removed automatic hold-to-straighten and release-time simplification; short strokes no longer stretch to the generic card minimum width. Optional smoothing is off by default and uses the same path in the live preview and saved stroke. Shape cleanup remains an explicit selection action.
+- Added Whole stroke and Precise erasers with a size preview, protected locked/locally hidden ink, cancellation, and one undo entry per gesture. Precise erasing splits only the affected ink, retaining color, highlight transparency, and grouping; notes and other cards remain untouched.
+- Added a translucent Highlighter, freehand Lasso selection, remembered ink/eraser settings, and up to five favorite pens. Included fine ink, purple pen, and yellow highlight presets. Selected ink width can be adjusted under More options.
+- Kept drawing controls under the top toolbar using Nook's purple/lilac styling. Advanced settings live under More; touch drawing is opt-in, and nearby palm input during pen use is ignored. P/H/E/L switch ink tools while Draw is active. Updated Help and module cache versions.
+- Verification: 72 JavaScript tests passed; development/test compilation with warnings treated as errors and changed Elixir formatting checks passed. Isolated browser checks exercised actual modules/styles/template: unchanged paths after pausing/releasing, unchanged narrow-stroke dimensions, optional smoothing, both erasers, undo/redo, lasso, locked ink, cancellation, preset persistence, and 390-pixel layouts. Browser error logs were empty. PostgreSQL is absent locally, so database/channel integration tests and live-board persistence were not run.
+- Source backup: .nook-history/before-drawing-edit-tools.zip. Browser fixtures did not touch saved boards.
+
+# 0.11.1 — Free rotation and top drawing tools (November 16, 2026)
+
+- Added a circular-arrow handle and numeric degree control for individual canvas items and selections/groups. Drag continuously through multiple full turns in either direction; Shift snaps to 15-degree increments. Position locks also protect rotation.
+- Saved rotation participates in collaboration previews, undo/redo, duplication, and existing storage. Connected lines follow rotated item boundaries and anchors. Fit view, selection bounds, stroke grouping, cleanup, and individual resizing account for rotation.
+- Moved Draw immediately after Text in the top toolbar with a pen and ink-line icon. Ink colors, brush size, and stroke grouping open beneath the top tools. The lower controls retain Select, Hand, navigation settings, and zoom. Added responsive sizing and updated Help.
+- Verification: 65 JavaScript tests passed; development/test compilation with warnings treated as errors and changed Elixir formatting checks passed. Isolated browser checks used the actual canvas modules, template, and styles to verify drawing, multi-turn/group rotation, undo/redo, snapping, cancellation, toolbar collapse, and a 390-pixel layout. Database integration tests and live persistence could not run because the local PostgreSQL setup is absent.
+- Source backup: .nook-history/before-rotation-toolbar.zip. Browser fixtures were isolated from saved boards.
+
 # 0.9.11 — Task titles remain accessible when idle (November 11, 2026)
 
 - Reproduced the remaining title failure: an untitled task's title had display:none outside editing, so the earlier click-target fix did not help after clicking away or reloading. A second rule also removed empty placeholders outside editing.

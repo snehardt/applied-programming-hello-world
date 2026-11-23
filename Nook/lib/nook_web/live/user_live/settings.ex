@@ -9,9 +9,9 @@ defmodule NookWeb.UserLive.Settings do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="text-center">
+      <section class="studio-account-settings"><div class="studio-settings-heading">
         <.header>
-          Account Settings
+          Account settings
           <:subtitle>Your Nook account</:subtitle>
         </.header>
       </div>
@@ -67,6 +67,7 @@ defmodule NookWeb.UserLive.Settings do
           Save Password
         </.button>
       </.form>
+      </section>
     </Layouts.app>
     """
   end

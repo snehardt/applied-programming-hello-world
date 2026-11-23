@@ -18,3 +18,10 @@ test('corrupt history storage is ignored without breaking the board',()=>{const 
 test('queued offline undo checks against acknowledged state and preserves unrelated edits',async()=>{const {guardedHistoryPlan}=await import('../priv/static/assets/history.mjs');const h=new BoardHistory();h.record(board(box()),board(box({x:20})));const plan=h.plan(board(box({x:20})),'undo');const {group,...entry}=plan.entry;const guard=JSON.parse(JSON.stringify({direction:'undo',entry}));const resumed=guardedHistoryPlan(board(box({x:20,text:'Their text',revision:4})),guard);assert.equal(resumed.error,undefined);assert.deepEqual(resumed.ops,[{type:'patch',id:'a',changes:{x:0}}]);assert.ok(guardedHistoryPlan(board(box({x:30})),guard).error);});
 
 test('new connections can be undone after the server adds its default layer',()=>{const h=new BoardHistory(),a=box(),b=box({id:'b'}),edge={id:'edge',type:'connection',x:0,y:0,from:'a',to:'b'};h.record(board(a,b),board(a,b,edge));const state=board(a,b,{...edge,z:0,revision:1});execute(h,state,'undo');assert.equal(state.elements.edge,undefined);execute(h,state,'redo');assert.equal(state.elements.edge.to,'b');});
+
+ test('file replacement undo keeps originals referenced and preserves later position changes',()=>{
+ const a=box({type:'file',asset_id:'old',name:'a.png',mime:'image/png',size:12}),b={...a,asset_id:'new',name:'b.png',size:20};
+ const h=new BoardHistory();h.record(board(a),board(b));const state=board({...b,x:500});
+ assert.equal(h.plan(state,'undo').ops[0].type,'put');execute(h,state,'undo');assert.equal(state.elements.a.asset_id,'old');assert.equal(state.elements.a.x,500);
+ execute(h,state,'redo');assert.equal(state.elements.a.asset_id,'new');
+ });

@@ -1,0 +1,88 @@
+/* Approved welcome-screen design, scoped to the home page. */
+#landing 450;500;550;600;650;700&display=swap');
+*{box-sizing:border-box}
+#landing body{margin:0;background:#fcfbfd;color:#302936;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+#landing button,#landing a{font:inherit}
+#landing button{cursor:pointer}
+#landing a{color:inherit;text-decoration:none}
+#landing button:focus-visible,#landing a:focus-visible{outline:2px solid #a987cf;outline-offset:4px}
+#landing header{height:64px;background:#281135;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 54px}
+#landing header img{width:109px;mix-blend-mode:lighten}
+#landing header nav{display:flex;align-items:center;gap:26px;font-size:13px}
+#landing header a{color:#e8dcef}
+#landing header a:last-child{border:1px solid #70547d;padding:8px 13px;border-radius:4px;color:#fff}
+#landing .welcome-home{max-width:1210px;margin:auto;padding:0 44px}
+#landing .welcome{display:grid;grid-template-columns: .85fr 1.15fr;gap:55px;align-items:center;padding:66px 0 58px}
+#landing h1{font-size:47px;line-height:1.13;font-weight:550;letter-spacing:-1.9px;margin:0 0 22px}
+#landing h1 span{display:block;color:#795392}
+#landing .welcome-copy>p{font-size:15px;line-height:1.8;color:#6b6074;max-width:340px;margin:0 0 28px}
+#landing .actions{display:flex;gap:11px}
+#landing .actions button{border-radius:5px;border:1px solid #d8cedf;padding:12px 17px;font-size:13px;min-height:44px;background:transparent;color:#382340}
+#landing .actions .primary{background:#281135;color:#fff;border-color:#281135;display:flex;align-items:center;gap:9px}
+#landing .primary svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.5}
+#landing .welcome-copy>small{display:block;font-size:11px;color:#6b6074;margin-top:16px}
+#landing .board{height:350px;position:relative;border:1px solid #d9cfe0;border-radius:6px;background:#fff;box-shadow:0 8px 26px #39234707;overflow:hidden;isolation:isolate}
+#landing .board-head{height:39px;border-bottom:1px solid #e6dfea;display:flex;align-items:center;justify-content:space-between;padding:0 15px;font-size:11px;color:#6e5a7b;background:#fcfafc}
+#landing .board-head .avatars{display:flex}
+#landing .avatars span{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;font-size:9px;background:#e9dff3;border:2px solid #fcfafc;color:#6e4c86;margin-left:-4px}
+#landing .avatars span+span{background:#e7eee6;color:#56745e}
+#landing .board-canvas{height:calc(100% - 39px);position:relative;background-image:radial-gradient(#e5deeb .7px,transparent .7px);background-size:19px 19px;background-color:#fcfbfd}
+#landing .mini-rail{position:absolute;left:10px;top:15px;border:1px solid #ddd2e5;border-radius:4px;width:29px;padding:4px 3px;background:#fff;display:grid;gap:5px;z-index:3}
+#landing .mini-rail span{height:24px;display:grid;place-items:center;color:#8a709f;font-size:15px}
+#landing .mini-rail span:first-child{background:#eee4f7;border-radius:3px;color:#4e3163}
+#landing .mini-rail svg{height:16px;width:16px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#landing .board-art{position:absolute;left:42px;top:8px;width:calc(100% - 50px);height:calc(100% - 20px)}
+#landing .board-art text{font-family:'DM Sans',sans-serif;fill:#583b6d}
+#landing .board-art .hand{font-family:'Segoe Print','Comic Sans MS',cursive}
+#landing .board-art .line{fill:none;stroke:#9d80b1;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#landing .board-art .ink{stroke:#784796;stroke-width:2}
+#landing .zoom{position:absolute;bottom:10px;left:10px;font-size:8px;color:#8e7a9b;background:#fff;border:1px solid #e4dbe9;border-radius:3px;padding:4px 7px}
+#landing .board-note{display:flex;align-items:center;gap:7px;margin:13px 0 0;font-size:11px;color:#6b6074}
+#landing .board-note:before{content:'';width:5px;height:5px;border-radius:50%;background:#b29ac3}
+#landing .recent{border-top:1px solid #e1dce5;padding-top:28px}
+#landing .recent-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+#landing .recent h2{font-size:16px;font-weight:550;letter-spacing:-.2px;margin:0}
+#landing .recent-heading a{font-size:11px;color:#6b6074}
+#landing .recent-list{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+#landing .recent-item{display:flex;align-items:center;gap:18px;padding:17px 0;border-bottom:1px solid #e8e2ec}
+#landing .thumb{width:92px;height:60px;flex:none;border:1px solid #e1d5e8;border-radius:3px;background:#f7f2fa;padding:8px}
+#landing .thumb svg{width:100%;height:100%;fill:none;stroke:#ae92c1;stroke-width:1.2}
+#landing .recent-item strong{font-size:13px;font-weight:500}
+#landing .recent-item p{font-size:11px;color:#6b6074;margin:6px 0 0}
+#landing .recent-item .dots{margin-left:auto;font-size:14px;color:#6b6074;letter-spacing:2px;padding:5px}
+#landing footer{display:flex;justify-content:space-between;color:#6b6074;font-size:11px;padding:28px 0 26px}
+#landing footer a{display:flex;align-items:center;gap:6px}
+#landing footer svg{height:13px;width:13px;fill:none;stroke:currentColor;stroke-width:1.4}
+#landing .preview-notice{display:none}
+@media(max-width:700px){#landing header{height:58px;padding:0 22px}
+#landing header img{width:90px}
+#landing header nav{gap:16px;font-size:12px}
+#landing header a:last-child{display:none}
+#landing .welcome-home{padding:0 23px}
+#landing .welcome{grid-template-columns:1fr;gap:28px;padding:38px 0 28px}
+#landing h1{font-size:38px;letter-spacing:-1.4px;margin-bottom:16px}
+#landing h1 span{display:inline}
+#landing .welcome-copy>p{font-size:14px;line-height:1.7;max-width:310px;margin-bottom:23px}
+#landing .actions button{font-size:12px;padding:11px 14px}
+#landing .welcome-copy>small{margin-top:13px}
+#landing .board{height:250px}
+#landing .board-head{height:32px;font-size:10px}
+#landing .board-canvas{height:calc(100% - 32px)}
+#landing .board-note{font-size:10px;margin-top:10px}
+#landing .mini-rail{top:9px;left:7px;width:24px;gap:1px}
+#landing .mini-rail span{height:21px}
+#landing .mini-rail svg{width:14px;height:14px}
+#landing .board-art{left:30px;width:calc(100% - 33px);top:3px;height:calc(100% - 10px)}
+#landing .recent{padding-top:23px}
+#landing .recent-list{display:block}
+#landing .recent-heading{margin-bottom:5px}
+#landing .recent h2{font-size:15px}
+#landing .thumb{width:70px;height:49px}
+#landing .recent-item{gap:14px;padding:14px 0}
+#landing footer{font-size:10px;padding:22px 0;gap:20px}
+#landing footer>span{max-width:245px;line-height:1.6}
+}
+
+#landing .welcome-home{display:block}#landing .recent-list{list-style:none;padding:0;margin:0}#landing .recent-list>li{min-width:0}#landing .recent-item>div{min-width:0}#landing .recent-item strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#landing footer button{display:flex;align-items:center;gap:6px;color:inherit;background:none;padding:0;font-size:11px}#landing .recent-item:hover strong{text-decoration:underline;text-underline-offset:3px}#landing .recent-heading{margin-bottom:20px}#landing .account-nav{margin-left:auto;color:#e8dcef}#landing .account-nav button{color:#e8dcef}#landing header .brand{max-height:none;height:auto;border-radius:0}#landing .welcome-copy>p{font-size:15px}#landing .welcome-copy h1{font-family:'DM Sans',sans-serif}#landing .mini-rail{pointer-events:none}#landing .welcome .actions .primary:hover{background:#43234e;transform:none}#landing .welcome .actions button:not(.primary):hover{background:#f2edf7}
+@media(max-width:700px){#landing footer button{font-size:10px}#landing .welcome-copy>p{font-size:14px}#landing .account-nav{font-size:12px;gap:16px}#landing .account-nav a:not(:first-of-type),#landing .account-email{display:none}}
+#landing footer{max-width:none;margin:0;border-top:1px solid #e1dce5}#landing:has(#recent-boards:not([hidden])) footer{border-top:0}

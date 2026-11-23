@@ -58,7 +58,8 @@ defmodule NookWeb.BoardLive do
         end
 
       parts ->
-        code = (List.last(parts) || "") |> String.upcase()
+        raw_code = (List.last(parts) || "") |> String.upcase()
+        code = Nook.Rooms.resolve_code(raw_code) || raw_code
 
         case Nook.Boards.get(code, socket.assigns.actor) do
           {:ok, _} ->

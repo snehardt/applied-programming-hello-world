@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {recognizeStroke,cleanedStrokes,worldPoints} from '../priv/static/assets/drawing-shapes.mjs';
-import {makeStroke,enclosedStrokes,scheduleLineHold} from '../priv/static/assets/drawing.mjs';
+import {makeStroke,enclosedStrokes,strokePath} from '../priv/static/assets/drawing.mjs';
 import {BoardHistory} from '../priv/static/assets/history.mjs';
 import {applyOperation} from '../priv/static/assets/canvas-model.mjs';
 import {standardColors} from '../priv/static/assets/color-palette.mjs';
@@ -9,15 +9,11 @@ const p=(x,y)=>({x,y});
 const stroke=(points,id='s')=>makeStroke(points,'#210a3b',4,id,1);
 const circle=Array.from({length:65},(_,i)=>p(100+90*Math.cos(i*Math.PI/32),100+90*Math.sin(i*Math.PI/32)));
 
-test('holding straightens once, retains the rough sketch and permits endpoint adjustment',async()=>{
- const original=[p(0,0),p(40,12),p(90,10)],draft={points:original};let straightened=0;
- scheduleLineHold(()=>draft,()=>straightened++,10);
- await new Promise(resolve=>setTimeout(resolve,30));
- assert.equal(straightened,1);assert.deepEqual(draft.raw,original);assert.equal(draft.points.length,2);
- draft.points=[draft.points[0],p(120,50)];assert.deepEqual(draft.raw,original);
- const cancelled=scheduleLineHold(()=>draft,()=>straightened++,10);clearTimeout(cancelled);
- scheduleLineHold(()=>null,()=>straightened++,10);
- await new Promise(resolve=>setTimeout(resolve,30));assert.equal(straightened,1);
+test('raw ink preserves every sampled point without automatic cleanup',()=>{
+ const points=[p(0,0),p(40,12),p(90,10)],saved=stroke(points);
+ assert.equal(saved.linear,true);assert.equal(saved.points.length,points.length);
+ const restored=worldPoints(saved);restored.forEach((point,i)=>{assert.ok(Math.abs(point.x-points[i].x)<1e-8);assert.ok(Math.abs(point.y-points[i].y)<1e-8);});
+ assert.equal(strokePath(saved.points,saved.w,saved.h,saved.linear).includes(' Q '),false);
 });
 
 test('recognizes boxes, triangles, ovals, diamonds, lines and a continuous arrow',()=>{

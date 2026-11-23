@@ -21,6 +21,7 @@ defmodule Nook.Boards.Store do
       true ->
         record = %Board{
           code: code,
+          room_code: Nook.Rooms.new_code(),
           owner_id: if(kind == :permanent, do: user.id),
           guest_owner_hash: if(kind == :guest, do: Access.hash(actor.guest_id)),
           legacy_access: false
@@ -74,7 +75,7 @@ defmodule Nook.Boards.Store do
       if Repo.get(Board, code) do
         :skipped
       else
-        record = %Board{code: code, legacy_access: true}
+        record = %Board{code: code, room_code: Nook.Rooms.new_code(), legacy_access: true}
         record = record |> Ecto.Changeset.change(Access.activity(record)) |> Repo.insert!()
         persist(record, %{"elements" => %{}}, board)
         :imported
@@ -85,8 +86,22 @@ defmodule Nook.Boards.Store do
   defp snapshot(record, actor \\ nil) do
     elements = Repo.all(from(e in Element, where: e.board_code == ^record.code))
 
+    elements =
+      Enum.map(elements, fn el ->
+        if el.type == "file" and Map.has_key?(el.content, "data") do
+          content = Nook.Attachments.externalize(record.code, el.content)
+
+          if content != el.content,
+            do: Repo.update!(Ecto.Changeset.change(el, content: content)),
+            else: el
+        else
+          el
+        end
+      end)
+
     %{
       "code" => record.code,
+      "room_code" => record.room_code || record.code,
       "title" => record.title,
       "revision" => record.revision,
       "recent_operations" => record.recent_operations,
@@ -155,7 +170,7 @@ defmodule Nook.Boards.Store do
         h: number(el["h"]),
         z: el["z"] || 0,
         revision: (existing.revision || 0) + 1,
-        content: Map.drop(el, @geometry)
+        content: Nook.Attachments.externalize(record.code, Map.drop(el, @geometry), true)
       ]
 
       existing |> Ecto.Changeset.change(attrs) |> Repo.insert_or_update!()
@@ -164,6 +179,16 @@ defmodule Nook.Boards.Store do
 
   defp number(nil), do: nil
   defp number(n), do: n / 1
+
+  def with_access(code, actor, permission, operation) do
+    Repo.transaction(fn ->
+      record = locked!(code)
+      authorize!(record, actor, permission)
+      result = operation.()
+      touch(record)
+      result
+    end)
+  end
 
   def authorized?(code, actor, permission \\ :read) do
     case Repo.get(Board, code) do

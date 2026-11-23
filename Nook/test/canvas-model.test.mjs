@@ -112,3 +112,15 @@ test('rounded connections detour around multiple obstacles in either direction',
 test('manual card resizing fits wrapped content while shape dimensions stay deliberate',async()=>{const {fitResizedCard}=await import('../priv/static/assets/canvas-model.mjs');assert.deepEqual(fitResizedCard({type:'task'},{w:180,h:160},242),{w:180,h:242});assert.deepEqual(fitResizedCard({type:'note'},{w:320,h:100},100),{w:320,h:100});assert.deepEqual(fitResizedCard({type:'shape'},{w:120,h:80},242),{w:120,h:80});});
 
 test('connection ports follow actual shape outlines including sloped triangle edges',async()=>{const {connectionPorts}=await import('../priv/static/assets/canvas-model.mjs');const triangle={x:0,y:0,w:200,h:180,shape:'triangle'};for(const p of connectionPorts(triangle)){assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y));if(p.side==='left')assert.ok(Math.abs(p.x-(1-p.y)/2)<1e-8);if(p.side==='right')assert.ok(Math.abs(p.x-(1+p.y)/2)<1e-8);}const circle={x:0,y:0,w:200,h:100,shape:'circle',text_center:{x:70,y:35}};for(const p of connectionPorts(circle))assert.ok(Math.abs(((p.x-.5)/.5)**2+((p.y-.5)/.5)**2-1)<1e-8);});
+
+
+test('connection targets exclude loose text and stale one-item groups',async()=>{
+ const {canConnectElement}=await import('../priv/static/assets/canvas-model.mjs');
+ const text={id:'t',type:'text',group_id:'g'},note={id:'n',type:'note',group_id:'g'};
+ assert.equal(canConnectElement({...text,group_id:null},{t:text,n:note}),false);
+ assert.equal(canConnectElement(text,{t:text}),false);
+ assert.equal(canConnectElement(text,{t:text,n:note}),true);
+ assert.equal(canConnectElement(note,{n:note}),true);
+ assert.equal(canConnectElement({id:'c',type:'connection'},{}),false);
+ const drawing={id:'s',type:'stroke',group_id:'g'};assert.equal(canConnectElement(drawing,{s:drawing,n:note}),false);
+});

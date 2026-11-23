@@ -216,4 +216,124 @@ defmodule Nook.AdvancedCanvasTest do
                actor
              )
   end
+
+  test "rotation survives creation, patching and storage beyond full turns" do
+    actor = Access.new_guest()
+    code = Boards.create(actor)["code"]
+    element = Map.put(note("rotating"), "rotation", 810.5)
+    assert {:ok, 1} = Boards.apply_op(code, %{"type" => "put", "element" => element}, actor)
+    assert {:ok, 2} = Boards.apply_op(code, patch("rotating", 1, %{"rotation" => -1080}), actor)
+    assert {:ok, saved} = Nook.Boards.Store.get(code)
+    assert saved["elements"]["rotating"]["rotation"] == -1080
+
+    assert {:error, :invalid} =
+             Boards.apply_op(code, patch("rotating", 2, %{"rotation" => "90deg"}), actor)
+  end
+
+  test "highlighter appearance and adjustable ink widths survive storage and reject invalid values" do
+    actor = Access.new_guest()
+    code = Boards.create(actor)["code"]
+
+    element = %{
+      "id" => "highlight",
+      "type" => "stroke",
+      "x" => 0,
+      "y" => 0,
+      "w" => 100,
+      "h" => 50,
+      "text" => "",
+      "color" => "#e7b52b",
+      "stroke_width" => 18,
+      "points" => [[0.1, 0.5], [0.9, 0.5]],
+      "linear" => true,
+      "opacity" => 0.3
+    }
+
+    assert {:ok, 1} = Boards.apply_op(code, %{"type" => "put", "element" => element}, actor)
+    assert {:ok, 2} = Boards.apply_op(code, patch("highlight", 1, %{"stroke_width" => 10}), actor)
+    assert {:ok, saved} = Nook.Boards.Store.get(code)
+    assert saved["elements"]["highlight"]["opacity"] == 0.3
+    assert saved["elements"]["highlight"]["stroke_width"] == 10
+
+    for changes <- [%{"opacity" => 2}, %{"opacity" => "transparent"}, %{"stroke_width" => 25}] do
+      assert {:error, :invalid} = Boards.apply_op(code, patch("highlight", 2, changes), actor)
+    end
+  end
+
+  test "plain text requires a real group before a new connection can be created" do
+    actor = Access.new_guest()
+    code = Boards.create(actor)["code"]
+    text = Map.put(note("words"), "type", "text")
+
+    edge = %{
+      "id" => "edge",
+      "type" => "connection",
+      "x" => 0,
+      "y" => 0,
+      "from" => "words",
+      "to" => "card"
+    }
+
+    assert {:ok, 1} =
+             Boards.apply_op(
+               code,
+               batch([
+                 %{"type" => "put", "element" => text},
+                 %{"type" => "put", "element" => note("card")}
+               ]),
+               actor
+             )
+
+    assert {:error, :limit} = Boards.apply_op(code, %{"type" => "put", "element" => edge}, actor)
+    assert {:ok, 2} = Boards.apply_op(code, patch("words", 1, %{"group_id" => "g"}), actor)
+    assert {:error, :limit} = Boards.apply_op(code, %{"type" => "put", "element" => edge}, actor)
+    assert {:ok, 3} = Boards.apply_op(code, patch("card", 1, %{"group_id" => "g"}), actor)
+    assert {:ok, 4} = Boards.apply_op(code, %{"type" => "put", "element" => edge}, actor)
+  end
+
+  test "drawings cannot be connection endpoints, including grouped ink" do
+    actor = Access.new_guest()
+    code = Boards.create(actor)["code"]
+
+    stroke = %{
+      "id" => "ink",
+      "type" => "stroke",
+      "x" => 0,
+      "y" => 0,
+      "w" => 100,
+      "h" => 50,
+      "text" => "",
+      "color" => "#210a3b",
+      "stroke_width" => 4,
+      "points" => [[0.1, 0.5], [0.9, 0.5]],
+      "linear" => true,
+      "group_id" => "g"
+    }
+
+    card = Map.put(note("card"), "group_id", "g")
+
+    assert {:ok, 1} =
+             Boards.apply_op(
+               code,
+               batch([
+                 %{"type" => "put", "element" => stroke},
+                 %{"type" => "put", "element" => card}
+               ]),
+               actor
+             )
+
+    for {from, to} <- [{"ink", "card"}, {"card", "ink"}] do
+      edge = %{
+        "id" => "edge",
+        "type" => "connection",
+        "x" => 0,
+        "y" => 0,
+        "from" => from,
+        "to" => to
+      }
+
+      assert {:error, :limit} =
+               Boards.apply_op(code, %{"type" => "put", "element" => edge}, actor)
+    end
+  end
 end

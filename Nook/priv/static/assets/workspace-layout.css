@@ -81,3 +81,172 @@
 .draw-palette[hidden]{display:none;}.draw-controls{flex-wrap:wrap;}.draw-controls button[aria-pressed=true]{background:#eee3ff;color:#210a3b;}
 .draw-group-box{position:absolute;border:2px solid #ad7bfa;background:#ad7bfa18;pointer-events:none;z-index:1000001;}
 .draw-group-candidate{outline:2px solid #ad7bfa;}
+/* Drawing lives with creation tools, with its ink settings directly underneath. */
+#tool-dock .draw-controls{position:absolute;top:calc(100% + 10px);bottom:auto;left:90px;right:auto;max-width:calc(100% - 90px);padding:10px 14px;gap:12px;border-radius:12px;font-size:12px}
+#tool-dock .draw-controls button{min-height:32px;border:1px solid var(--border);border-radius:7px;padding:6px 10px}
+#tool-dock .draw-palette{top:calc(100% + 8px);bottom:auto;left:0;right:auto;max-width:calc(100vw - 32px)}
+#tool-dock #toolbar{flex-wrap:wrap}
+#rotation-control{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px}
+#rotation-control[hidden]{display:none}
+#rotation-degrees{width:76px;padding:6px;border:1px solid var(--border);border-radius:7px}
+.rotation-handle{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:white;border:1.5px solid #a16bdd;border-radius:50%;color:#7040ac;z-index:1000003;cursor:grab;padding:0;line-height:1;touch-action:none}
+.rotation-handle:active{cursor:grabbing}
+.rotation-handle[hidden]{display:none}
+@media(max-width:650px){#tool-dock .tool{width:calc((100vw - 52px)/9)}#tool-dock .draw-controls{left:0;max-width:100%;gap:8px}#tool-dock .draw-controls input[type=range]{width:75px}}
+
+.tools-collapsed .draw-controls{display:none}
+/* Ink tools use Nook's quiet purple controls and keep advanced options tucked away. */
+#tool-dock .draw-controls{display:flex;flex-direction:column;align-items:stretch;width:650px;gap:8px;padding:10px 12px}
+#tool-dock .draw-controls[hidden]{display:none}
+.ink-tool-tabs{display:flex;gap:4px;padding:3px;background:#f7f3fc;border-radius:9px}
+#tool-dock .ink-tool-tabs button{flex:1;border-color:transparent;background:transparent;padding:6px 10px}
+#tool-dock .ink-tool-tabs button[aria-pressed=true]{background:#eee3ff;color:#7040ac;border-color:#d8c3f1;box-shadow:0 1px 3px #210a3b08}
+.ink-settings{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+#tool-dock .draw-controls [hidden]{display:none!important}
+.ink-favorites{display:flex;align-items:center;gap:4px}
+#tool-dock .draw-controls .ink-favorite{display:flex;align-items:center;justify-content:center;width:28px;min-height:30px;padding:5px;border-radius:7px;background:white}
+.ink-favorite i{display:block;width:16px;border-radius:8px;background:var(--favorite-ink)}
+#tool-dock .draw-controls .ink-favorite[aria-pressed=true]{border-color:#9670cc;box-shadow:0 0 0 1px #9670cc}
+#tool-dock .draw-controls label{gap:5px;font-size:12px}
+#tool-dock .draw-controls input[type=range]{width:76px;accent-color:#9670cc}
+#tool-dock .draw-controls input[type=checkbox]{accent-color:#9670cc}
+#tool-dock .draw-controls output{min-width:18px;font-variant-numeric:tabular-nums}
+.ink-eraser-label select{max-width:136px;border:1px solid var(--border);border-radius:7px;background:white;padding:6px;color:var(--ink);font:inherit}
+.ink-more{position:relative;margin-left:auto}
+.ink-more summary{cursor:pointer;padding:8px;border-radius:7px;font-size:12px;list-style:none}
+.ink-more summary:hover,.ink-more[open] summary{background:#eee3ff;color:#7040ac}
+.ink-more-panel{position:absolute;top:calc(100% + 9px);right:0;min-width:240px;max-width:calc(100vw - 48px);background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px #210a3b12;padding:12px;display:grid;gap:10px;z-index:35}
+.ink-more-panel p{font-size:11px;line-height:1.5;color:var(--muted);margin:0}
+#tool-dock .draw-controls .ink-status{font-size:11px;color:var(--muted);display:block}
+.ink-eraser-cursor{position:absolute;border:1.5px solid #8951cf;border-radius:50%;transform:translate(-50%,-50%);background:#ffffff60;box-shadow:0 0 0 1px #ffffffa0;pointer-events:none;z-index:1000004}
+.erasing-mode,.erasing-mode .element,.erasing-mode .element *{cursor:none!important}
+.ink-erase-source{visibility:hidden!important}
+.ink-erasure-preview{pointer-events:none}
+.ink-lasso{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:1000004}
+.ink-lasso path{fill:#ad7bfa18;stroke:#8951cf;stroke-width:1.5;stroke-dasharray:5 4;vector-effect:non-scaling-stroke}
+@media(max-width:650px){#tool-dock .draw-controls{width:100%}#tool-dock .ink-tool-tabs button{padding:6px 3px}.ink-settings{gap:6px}#tool-dock .draw-controls .ink-status{display:none}.ink-more-panel{position:fixed;left:16px;right:16px;top:auto;margin-top:10px;width:auto;max-width:none}.ink-favorites{gap:3px}}
+/* Stroke boxes keep their saved dimensions, including dots and narrow vertical ink. */
+#workspace .element.stroke{min-width:0;min-height:0}
+/* Compact creation strip: options appear beside their tool, then tuck away. */
+#tool-dock{top:84px;right:auto;width:max-content;max-width:calc(100vw - 24px);left:12px;gap:6px;align-items:center;flex-wrap:nowrap}
+#tool-dock #tools-toggle{min-height:30px;padding:6px 9px;font-size:11px;border-radius:8px}
+#tool-dock #toolbar{padding:4px;gap:1px;flex-wrap:nowrap;border-radius:12px;max-width:100%;box-shadow:0 3px 14px #3111470d}
+#tool-dock .tool{width:54px;height:44px;gap:2px;border-radius:8px;flex-shrink:0}
+#tool-dock .tool svg{width:22px;height:22px}
+#tool-dock .tool>span{font-size:10px;line-height:1.2}
+#tool-dock .tool+.tool:before{display:none}
+#tool-dock #active-tool{padding:7px 9px;font-size:11px}
+#tool-dock .draw-controls{position:fixed;bottom:auto;right:auto;width:400px;max-width:calc(100vw - 24px);padding:8px;gap:6px;border-radius:10px;box-shadow:0 4px 18px #210a3b12}
+#tool-dock .draw-controls .ink-status{display:none}
+#tool-dock .draw-controls button{min-height:28px;padding:4px 7px;font-size:11px}
+#tool-dock .ink-tool-tabs{padding:2px;gap:2px}
+#tool-dock .ink-tool-tabs button{padding:5px 4px}
+#tool-dock .ink-settings{gap:6px}
+#tool-dock .draw-controls label{font-size:11px}
+#tool-dock .draw-controls .ink-favorite{width:25px;min-height:27px;padding:4px}
+#tool-dock .draw-controls input[type=color]{width:28px;height:27px;border-radius:6px}
+#tool-dock .draw-controls input[type=range]{width:64px}
+#workspace #selection-bar{padding:4px;gap:3px;border-radius:9px;box-shadow:0 3px 14px #210a3b0c}
+#workspace #selection-bar>button{min-height:29px;padding:4px 8px;font-size:11px}
+.context-panel{position:fixed;display:flex;align-items:center;gap:8px;padding:8px;background:white;border:1px solid var(--border);border-radius:9px;box-shadow:0 4px 18px #210a3b12;z-index:32;font-size:11px;max-width:calc(100vw - 24px)}
+.context-panel button{padding:6px 8px;border:1px solid var(--border);border-radius:6px}
+#rotation-degrees{width:70px;font-size:12px}
+#workspace #color-menu{position:fixed;transform:none;bottom:auto;width:264px;max-width:calc(100vw - 24px);padding:10px;border-radius:10px;max-height:calc(100vh - 100px);overflow-y:auto}
+#color-menu .standard-color-grid,.draw-palette .standard-color-grid{grid-template-columns:repeat(10,20px);gap:3px;margin:6px 0}
+#color-menu .standard-color-grid .standard-color,.draw-palette .standard-color-grid .standard-color{width:20px;height:20px;margin:0;padding:0}
+#color-menu label{font-size:11px;margin-bottom:7px}
+#color-menu button{font-size:11px;padding:5px;margin:2px}
+#color-menu .color-choice{width:24px;height:24px}
+#color-menu p{font-size:11px;margin:6px 0}
+#workspace #shape-menu{padding:5px;gap:2px;border-radius:10px}
+#workspace #shape-menu button{min-width:45px;padding:5px 3px;font-size:22px}
+#workspace #shape-menu button span{font-size:9px}
+#workspace #icon-menu{width:276px;padding:10px;border-radius:10px}
+#icon-menu p{font-size:10px;line-height:1.4;margin:6px 0}
+#icon-results button{padding:5px;margin:2px}
+#workspace #selection-bar .advanced-options{width:288px;padding:8px;gap:6px;border-radius:10px;max-height:calc(100vh - 100px);overflow-y:auto}
+#advanced-options>button{min-height:29px;font-size:11px;padding:5px}
+#advanced-options label{font-size:11px}
+@media(max-width:650px){#tool-dock{top:74px;width:calc(100vw - 24px);gap:4px}#tool-dock #tools-toggle{width:27px;min-width:27px;padding:5px;font-size:0}#tool-dock #tools-toggle:before{content:'☰';font-size:14px}#tool-dock #toolbar{width:100%;flex-basis:auto;min-width:0;padding:3px}#tool-dock .tool{flex:1;min-width:0;max-width:none;width:calc((100vw - 66px)/9);height:41px}#tool-dock .tool svg{width:19px;height:19px}#tool-dock .tool>span{font-size:9px}#tool-dock .draw-controls{width:358px}#workspace #shape-menu button{min-width:43px}.ink-more-panel{max-height:calc(100vh - 160px);overflow-y:auto}}
+@media(max-width:650px){#tool-dock .ink-settings{gap:4px}#tool-dock .draw-controls .ink-favorite{width:22px;min-height:27px;padding:3px}#tool-dock .draw-controls .ink-color-label{font-size:0;gap:0}#tool-dock .draw-controls input[type=range]{width:56px}#tool-dock .draw-controls output{min-width:14px}#tool-dock .ink-more summary{padding:6px;font-size:11px}}
+/* Roomier popovers sit beside their controls; icon artwork keeps its existing size. */
+#tool-dock .draw-controls{width:460px;padding:12px;gap:9px}
+#tool-dock .draw-controls button{min-height:31px;padding:6px 9px;font-size:12px}
+#tool-dock .draw-controls label{font-size:12px}
+#tool-dock .draw-palette{position:fixed;right:auto;bottom:auto;left:auto;top:auto;max-width:calc(100vw - 24px);padding:12px}
+#tool-dock .ink-more-panel{position:fixed;right:auto;bottom:auto;left:auto;top:auto;width:270px;min-width:0;max-width:calc(100vw - 24px);margin:0;padding:14px}
+#workspace #icon-menu{width:316px;padding:14px}
+#icon-menu .panel-title{font-size:13px;font-weight:600;margin:0 0 10px}
+#icon-menu p{font-size:11px;line-height:1.5}
+#icon-results{gap:4px}
+#icon-results button{padding:8px;margin:0;font-size:11px}
+#icon-results .icon-glyph{width:30px;height:30px;margin:0 auto 4px}
+#workspace #shape-menu{padding:9px;gap:4px}
+#workspace #shape-menu button{min-width:54px;padding:8px 5px;font-size:22px}
+#workspace #shape-menu button span{font-size:10px}
+#workspace #color-menu{width:300px;padding:14px}
+#color-menu .standard-color-grid{grid-template-columns:repeat(10,22px);gap:4px}
+#color-menu .standard-color-grid .standard-color{width:22px;height:22px}
+#workspace #selection-bar .advanced-options{width:330px;padding:12px;gap:8px}
+#advanced-options>button{min-height:32px;font-size:12px;padding:7px}
+#advanced-options label{font-size:12px}
+.context-panel{padding:12px;gap:10px;font-size:12px}
+#workspace .element.image-file{padding:0;background:transparent;border:0;box-shadow:none;min-width:0;min-height:0}
+#workspace .element.image-file img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;margin:0;display:block;pointer-events:none}
+.element.document-file{display:flex;align-items:center;gap:12px;padding:14px}
+.file-symbol{width:32px;height:32px;flex:0 0 32px;color:#9670cc}
+.file-symbol .icon-glyph{width:32px;height:32px}
+.file-name{font-size:13px;font-weight:500;overflow-wrap:anywhere;overflow:hidden;max-height:100%}
+@media(max-width:650px){#tool-dock .draw-controls{width:358px;max-width:calc(100vw - 24px);padding:10px}#workspace #shape-menu button{min-width:48px}#tool-dock .ink-more-panel{width:270px}}
+/* One selection cue per object; row editing tools appear only where you are working. */
+#workspace .element .content:focus,#workspace .element .content:focus-visible,#workspace .task-item-text:focus,#workspace .task-item-text:focus-visible{outline:none;box-shadow:none}
+#workspace .element.shape.selected,#workspace .element.shape.connect-source,#workspace .element.shape.connect-target{outline:none}
+#workspace .element.shape.selected .shape-outline{stroke:#8951cf;stroke-width:2.5}
+#nook-ui.multiple-selection .element.selected{outline:none}
+#nook-ui.multiple-selection .element.shape.selected .shape-outline{stroke:#9e77c7;stroke-width:1.5}
+#nook-ui.multiple-selection .element.selected>.resize{display:none}
+#workspace .task-row .task-remove,#workspace .task-row .task-reorder{opacity:0!important;pointer-events:none;transition:opacity .12s}
+#workspace .task-row:hover .task-remove,#workspace .task-row:hover .task-reorder,#workspace .task-row:focus-within .task-remove,#workspace .task-row:focus-within .task-reorder{opacity:1!important;pointer-events:auto}
+#workspace .element.task .task-add{opacity:0;pointer-events:none}
+#workspace .element.task:hover .task-add,#workspace .element.task:focus-within .task-add{opacity:1;pointer-events:auto}
+#workspace .task-insert-zone{display:none}
+#workspace .element.connect-available{outline:none}
+#workspace .element.shape.connect-source .shape-outline,#workspace .element.shape.connect-target .shape-outline{stroke:#8951cf;stroke-width:2.5}
+#connections path[data-id]:not(.connection-hit){pointer-events:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+#connections .connection-hit{stroke:transparent;stroke-width:18;fill:none;pointer-events:stroke;vector-effect:non-scaling-stroke;cursor:pointer}
+#connections defs path{fill:#9670cc;stroke:none;pointer-events:none}
+/* A single, quiet room sheet: share details, people, and your display name. */
+#room-dialog{width:440px;padding:26px;border-radius:18px;max-height:calc(100vh - 32px);overflow-y:auto}
+#room-dialog h2{font-size:24px;margin:0 0 20px;letter-spacing:-.6px}
+#room-dialog h3{font-size:13px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+#room-dialog label{font-size:11px;letter-spacing:0;color:#695a78;margin:0 0 6px}
+#room-dialog input:not([type=checkbox]){padding:9px 11px;min-height:38px;border-radius:8px;font-size:12px;background:#fcfaff}
+#room-dialog .copy-row{gap:8px}
+#room-dialog .copy-row button{min-width:78px;min-height:38px;padding:8px 12px;font-size:12px;border-radius:8px;white-space:nowrap}
+.room-share-fields{display:grid;gap:14px}
+.room-code-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+#room-dialog .room-code-heading>label{margin:0}
+#room-dialog #room-code{font-size:23px;font-weight:600;letter-spacing:4px;color:#7040ac;background:#f5effe}
+#room-dialog .room-toggle{display:flex;align-items:center;gap:5px;font-size:10px;white-space:nowrap}
+#room-dialog .room-toggle input{width:13px;height:13px;margin:0;accent-color:#9670cc}
+#room-dialog .room-hint{font-size:11px;line-height:1.5;margin:9px 0 18px;color:#82738e}
+#room-dialog .room-feedback{font-size:12px;line-height:1.5;margin:0 0 14px;color:#7040ac}
+.room-people{border-top:1px solid var(--border);padding-top:16px;margin-top:4px}
+#room-people-count{font-size:10px;background:#f2eafa;border-radius:9px;min-width:19px;text-align:center;padding:2px 5px;color:#7040ac}
+#room-dialog #participants{list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px;max-height:160px;overflow-y:auto}
+#room-dialog #participants li{display:flex;align-items:center;gap:9px;font-size:13px;padding:3px 0;border:0;background:transparent}
+.participant-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.participant-role{font-size:10px;color:#82738e}
+#room-dialog .room-name-form{margin:0}
+#room-dialog #advanced-sharing{border-top:1px solid var(--border);margin-top:18px;padding-top:13px}
+#room-dialog #advanced-sharing summary{font-size:11px;font-weight:500;color:#82738e;cursor:pointer}
+#room-dialog .room-settings-body{padding-top:10px}
+#room-dialog .room-settings-body p{font-size:11px;line-height:1.5;margin:10px 0 0}
+#room-dialog .invite-actions{display:flex;gap:7px;flex-wrap:wrap;margin:0}
+#room-dialog .invite-actions button{padding:7px 10px;font-size:11px}
+#room-dialog .room-waiting{background:#f7f2fe;border-radius:9px;padding:11px;margin:0 0 14px}
+#room-dialog #requests{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+#room-dialog #requests li{display:flex;gap:7px;align-items:center;border:0;padding:0;font-size:12px}
+#room-dialog #requests li>span{flex:1}
+#room-dialog #requests button{font-size:11px;padding:6px 8px;border-radius:7px}
+@media(max-width:500px){#room-dialog{padding:22px 18px}#room-dialog #room-code{font-size:21px;letter-spacing:3px}}

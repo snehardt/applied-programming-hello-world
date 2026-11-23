@@ -40,6 +40,8 @@ defmodule NookWeb.Router do
     post("/api/boards/:code/invitations/reuse", PageController, :reusable_invite)
     post("/api/boards/:code/invitations", PageController, :invite)
     delete("/api/boards/:code/invitations", PageController, :disable_invites)
+    post("/api/boards/:code/files", AttachmentController, :create)
+    get("/api/boards/:code/files/:id", AttachmentController, :show)
     get("/api/boards/:code", PageController, :board)
     get("/invite/:code/:token", InvitationController, :accept)
     get("/recover/:code/:token", InvitationController, :recover)

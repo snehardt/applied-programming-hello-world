@@ -18,7 +18,7 @@ defmodule NookWeb.PolishTest do
     for marker <- [
           "Skip to content",
           "retry-load",
-          "aria-label=\"Room and invitations\"",
+          "aria-labelledby=\"room-dialog-title\"",
           "board-load-state",
           "noscript"
         ] do

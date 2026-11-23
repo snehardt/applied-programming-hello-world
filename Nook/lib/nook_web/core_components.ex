@@ -8,7 +8,7 @@ defmodule NookWeb.CoreComponents do
     ~H"""
     <.form :if={@enabled} for={%{}} action="/auth/google" method="post" id={@id}>
       <button class="google-sign-in" type="submit"><img src="/assets/google-g.png" width="20" height="20" alt="" aria-hidden="true" /> Continue with Google</button>
-      <p class="google-sign-in-note">Use your Google account. No Nook password or email link needed.</p>
+      <p class="google-sign-in-note">Your boards stay in Nook.</p>
     </.form>
     """
   end

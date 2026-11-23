@@ -7,24 +7,7 @@ defmodule NookWeb.UserLive.Login do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm space-y-4">
-        <div class="text-center">
-          <.header>
-            Log in
-            <:subtitle>
-              <%= if @current_scope do %>
-                You need to reauthenticate to perform sensitive actions on your account.
-              <% else %>
-                Don't have an account? <.link
-                  navigate={~p"/users/register"}
-                  class="font-semibold text-brand hover:underline"
-                  phx-no-format
-                >Sign up</.link> for an account now.
-              <% end %>
-            </:subtitle>
-          </.header>
-        </div>
-
+      <Layouts.auth_frame title="Welcome back" subtitle={if @current_scope, do: "Confirm your login to change account settings.", else: "Log in to open your saved boards."}>
         <.google_sign_in />
 
         <div :if={Nook.GoogleAuth.email_enabled?() && local_mail_adapter?()} class="alert alert-info">
@@ -94,7 +77,9 @@ defmodule NookWeb.UserLive.Login do
             Log in only this time
           </.button>
         </.form>
-      </div>
+        <p class="studio-auth-link">New to Nook? <.link navigate={~p"/users/register"}>Sign up</.link></p>
+        <p class="studio-auth-link"><a href="/">Continue without an account</a></p>
+      </Layouts.auth_frame>
     </Layouts.app>
     """
   end

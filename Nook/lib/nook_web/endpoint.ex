@@ -13,7 +13,7 @@ defmodule NookWeb.Endpoint do
   socket("/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]])
 
   socket("/socket", NookWeb.UserSocket,
-    websocket: [max_frame_size: 1_600_000, connect_info: [session: @session_options]],
+    websocket: [max_frame_size: 12_500_000, connect_info: [session: @session_options]],
     longpoll: false
   )
 
@@ -23,7 +23,7 @@ defmodule NookWeb.Endpoint do
   plug(Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     json_decoder: Jason,
-    length: 1_600_000
+    length: 12_000_000
   )
 
   plug(Plug.MethodOverride)

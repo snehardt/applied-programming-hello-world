@@ -2,6 +2,7 @@ defmodule Nook.Boards.Board do
   use Ecto.Schema
   @primary_key {:code, :string, autogenerate: false}
   schema "boards" do
+    field(:room_code, :string)
     field(:title, :string, default: "Untitled board")
     field(:revision, :integer, default: 0)
     field(:recent_operations, {:array, :string}, default: [])

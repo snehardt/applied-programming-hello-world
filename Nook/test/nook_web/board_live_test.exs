@@ -18,7 +18,7 @@ defmodule NookWeb.BoardLiveTest do
     assert html =~ "Nook"
     assert html =~ "Whiteboard"
     assert html =~ "nook-logo.png"
-    view |> element("button[phx-click=create_board]", "Start a quick board") |> render_click()
+    view |> element("button[phx-click=create_board]", "New whiteboard") |> render_click()
     {path, _flash} = assert_redirect(view)
     code = String.replace_prefix(path, "/b/", "")
     assert {:ok, %{"title" => "Untitled board"}} = Nook.Boards.get(code, actor())

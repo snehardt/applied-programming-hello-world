@@ -158,7 +158,7 @@ defmodule Nook.BoardsTest do
     for change <- [
           %{"points" => []},
           %{"points" => [[2, 0]]},
-          %{"points" => List.duplicate([0, 0], 2049)},
+          %{"points" => List.duplicate([0, 0], 100_001)},
           %{"stroke_width" => 0},
           %{"color" => "url(evil)"}
         ] do

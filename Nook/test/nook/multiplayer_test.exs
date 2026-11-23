@@ -123,4 +123,32 @@ defmodule Nook.MultiplayerTest do
     {:ok, snapshot} = Boards.get(code, actor)
     assert snapshot["elements"]["a"]["text"] == "Newer"
   end
+
+  test "short room codes are stable aliases and still require owner admission" do
+    owner = Access.new_guest()
+    guest = Access.new_guest()
+    board = Boards.create(owner)
+    code = board["code"]
+    short = board["room_code"]
+    assert String.length(code) == 13
+    assert Regex.match?(~r/^[A-Z2-7]{6}$/, short)
+    assert Rooms.resolve_code(short) == code
+    assert Rooms.resolve_code(String.downcase(short)) == code
+
+    assert Rooms.resolve_code(String.slice(short, 0, 3) <> "-" <> String.slice(short, 3, 3)) ==
+             code
+
+    assert Rooms.resolve_code(code) == code
+    assert {:ok, same} = Boards.get(code, owner)
+    assert same["room_code"] == short
+    assert {:error, _} = Rooms.request(short, guest, "Visitor")
+    assert {:error, :not_found} = Boards.get(code, guest)
+    assert {:ok, _} = Rooms.set_open(code, owner, true)
+    assert {:ok, request} = Rooms.request(short, guest, "Visitor")
+    assert {:ok, [^request]} = Rooms.list(code, owner)
+    assert {:ok, _} = Rooms.decide(code, request.id, owner, "approved")
+    assert {:ok, %{status: "approved", path: path}} = Rooms.status(request.id, guest)
+    assert path == "/b/#{code}"
+    assert {:ok, _} = Boards.get(code, guest)
+  end
 end

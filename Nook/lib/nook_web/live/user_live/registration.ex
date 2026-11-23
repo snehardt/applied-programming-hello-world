@@ -8,20 +8,7 @@ defmodule NookWeb.UserLive.Registration do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm">
-        <div class="text-center">
-          <.header>
-            Register for an account
-            <:subtitle>
-              Already registered?
-              <.link navigate={~p"/users/log-in"} class="font-semibold text-brand hover:underline">
-                Log in
-              </.link>
-              to your account now.
-            </:subtitle>
-          </.header>
-        </div>
-
+      <Layouts.auth_frame title="Create an account" subtitle="Keep your boards in one place.">
         <.google_sign_in id="google-register" />
         <.form :if={Nook.GoogleAuth.email_enabled?()} for={@form} id="registration_form" phx-submit="save" phx-change="validate">
           <.input
@@ -38,7 +25,9 @@ defmodule NookWeb.UserLive.Registration do
             Create an account
           </.button>
         </.form>
-      </div>
+        <p class="studio-auth-link">Already have an account? <.link navigate={~p"/users/log-in"}>Log in</.link></p>
+        <p class="studio-auth-link"><a href="/">Continue without an account</a></p>
+      </Layouts.auth_frame>
     </Layouts.app>
     """
   end

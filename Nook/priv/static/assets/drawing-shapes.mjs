@@ -1,7 +1,8 @@
-import {simplifyStroke,makeStroke} from './drawing.mjs';
+import {rotatePoint,itemCenter} from './rotation.mjs';
+import {simplifyStroke,makeStroke} from './drawing.mjs?v=0.12.2';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const bounds=points=>{const xs=points.map(p=>p.x),ys=points.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys);return {x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y};};
-export const worldPoints=el=>el.points.map(([x,y])=>({x:el.x+x*el.w,y:el.y+y*el.h}));
+const bounds=points=>{let x=Infinity,y=Infinity,right=-Infinity,bottom=-Infinity;for(const p of points){x=Math.min(x,p.x);y=Math.min(y,p.y);right=Math.max(right,p.x);bottom=Math.max(bottom,p.y);}return {x,y,w:right-x,h:bottom-y};};
+export const worldPoints=el=>el.points.map(([x,y])=>rotatePoint({x:el.x+x*el.w,y:el.y+y*el.h},itemCenter(el),el.rotation||0));
 const ellipse=(b,start=0,end=Math.PI*2,count=64)=>Array.from({length:count+1},(_,i)=>({x:b.x+b.w/2+Math.cos(start+(end-start)*i/count)*b.w/2,y:b.y+b.h/2+Math.sin(start+(end-start)*i/count)*b.h/2}));
 function polygon(points,tolerance){let p=simplifyStroke([...points,points[0]],tolerance);p.pop();for(let pass=0;pass<3;pass++)p=p.filter((b,i)=>{const a=p[(i+p.length-1)%p.length],c=p[(i+1)%p.length],cross=Math.abs((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x));return distance(a,b)>tolerance&&cross/Math.max(1,distance(a,c))>tolerance;});return p;}
 export function recognizeStroke(points){
@@ -47,4 +48,4 @@ export function cleanedStrokes(elements){
   const recognized=recognizeStroke(ordered.flatMap(e=>e.points));if(recognized&&['box','triangle','diamond'].includes(recognized.kind)&&recognized.points.length-1===elements.length){return {kind:recognized.kind,elements:ordered.map((entry,i)=>cleanElement(elements[entry.i],[recognized.points[i],recognized.points[i+1]]))};}}
  return null;
 }
-function cleanElement(el,points){const next=makeStroke(points,el.color,el.stroke_width,el.id,el.z||0);return {...el,...next,linear:true};}
+function cleanElement(el,points){const next=makeStroke(points,el.color,el.stroke_width,el.id,el.z||0);return {...el,...next,...(el.rotation?{rotation:0}:{}),linear:true};}

@@ -1,7 +1,12 @@
+import {rotatePoint,itemCenter,rotatedBounds} from './rotation.mjs';
 export const uid = () => crypto.randomUUID();
+export function canConnectElement(el,elements){
+  if(!el||['connection','stroke'].includes(el.type))return false;
+  return el.type!=='text'||!!el.group_id&&Object.values(elements).some(other=>other.id!==el.id&&other.type!=='connection'&&other.group_id===el.group_id);
+}
 export const creationDefaults = {
   text:{w:360,h:80,font_size:18}, note:{w:320,h:200,font_size:16},
-  shape:{w:230,h:180,font_size:16},task:{w:320,h:190,font_size:16},
+  shape:{w:220,h:120,font_size:16},task:{w:300,h:140,font_size:16},
   icon:{w:80,h:80,font_size:16},idea:{w:240,h:160,font_size:16},file:{w:230,h:120,font_size:16}
 };
 export function draftHeight(current, required) {return Math.min(10000,Math.max(current,required));}
@@ -47,6 +52,7 @@ export function zoomAt(view, x, y, factor) {
   return {x: x - p.x * z, y: y - p.y * z, z};
 }
 export function outlinePoint(box, toward, anchor) {
+  if(box.rotation){const center=itemCenter(box),local=outlinePoint({...box,rotation:0},rotatePoint(toward,center,-box.rotation),anchor);return rotatePoint(local,center,box.rotation);}
   if (anchor) return {x:box.x+box.w*anchor.x,y:box.y+box.h*anchor.y};
   const x=box.x+box.w/2,y=box.y+box.h/2,dx=toward.x-x,dy=toward.y-y;
   const rx=Math.max(1,box.w/2),ry=Math.max(1,box.h/2);
@@ -69,7 +75,7 @@ export function outlinePoint(box, toward, anchor) {
 export function connectionEndpoints(a,b,edge={}) {
   const center=box=>box.text_center||{x:box.x+box.w/2,y:box.y+box.h/2};
   const port=(box,other,anchor)=>{
-    if(anchor||!box.text_center||box.shape)return outlinePoint(box,center(other),anchor);
+    if(anchor||box.rotation||!box.text_center||box.shape)return outlinePoint(box,center(other),anchor);
     const c=center(box),t=center(other),dx=t.x-c.x,dy=t.y-c.y;
     return Math.abs(dx)/box.w>=Math.abs(dy)/box.h?
       {x:dx>=0?box.x+box.w:box.x,y:Math.max(box.y,Math.min(box.y+box.h,c.y))}:
@@ -78,13 +84,8 @@ export function connectionEndpoints(a,b,edge={}) {
   return {start:port(a,b,edge.from_anchor),end:port(b,a,edge.to_anchor)};
 }
 export function curvePath(start,end) {
-  const dx=end.x-start.x,dy=end.y-start.y;
-  if(Math.abs(dx)>=Math.abs(dy)){
-    const bend=Math.min(240,Math.abs(dx)*.45)*Math.sign(dx||1);
-    return `M ${start.x} ${start.y} C ${start.x+bend} ${start.y}, ${end.x-bend} ${end.y}, ${end.x} ${end.y}`;
-  }
-  const bend=Math.min(240,Math.abs(dy)*.45)*Math.sign(dy||1);
-  return `M ${start.x} ${start.y} C ${start.x} ${start.y+bend}, ${end.x} ${end.y-bend}, ${end.x} ${end.y}`;
+  const dx=(end.x-start.x)/3,dy=(end.y-start.y)/3;
+  return `M ${start.x} ${start.y} C ${start.x+dx} ${start.y+dy}, ${end.x-dx} ${end.y-dy}, ${end.x} ${end.y}`;
 }
 // Visibility routing uses padded boxes; rounding stays inside that safety margin.
 export function segmentBlocked(a,b,box) {
@@ -95,9 +96,9 @@ export function segmentBlocked(a,b,box) {
   }
   return hi>=0&&lo<=1;
 }
-export function routePoints(start,end,obstacles) {
+export function routePoints(start,end,obstacles,margin=24) {
   const inside=(p,r)=>p.x>r.x&&p.x<r.x+r.w&&p.y>r.y&&p.y<r.y+r.h;
-  const boxes=obstacles.map(r=>({x:r.x-24,y:r.y-24,w:r.w+48,h:r.h+48})).filter(r=>!inside(start,r)&&!inside(end,r));
+  const boxes=obstacles.map(r=>({x:r.x-margin,y:r.y-margin,w:r.w+margin*2,h:r.h+margin*2})).filter(r=>!inside(start,r)&&!inside(end,r));
   const clear=(a,b)=>!boxes.some(r=>segmentBlocked(a,b,r));
   if(clear(start,end))return [start,end];
   const points=[start,end,...boxes.flatMap(r=>[{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}]).filter(p=>!boxes.some(r=>inside(p,r)))];
@@ -109,26 +110,27 @@ export function routePoints(start,end,obstacles) {
   }
   const route=[];for(let i=1;i!==undefined;i=previous[i])route.push(points[i]);return route.reverse();
 }
-export function roundedRoute(points) {
+export function roundedRoute(points,radius=96) {
   let d=`M ${points[0].x} ${points[0].y}`;
   for(let i=1;i<points.length-1;i++){
-    const a=points[i-1],b=points[i],c=points[i+1],ab=Math.hypot(b.x-a.x,b.y-a.y),bc=Math.hypot(c.x-b.x,c.y-b.y),r=Math.min(12,ab/3,bc/3);
+    const a=points[i-1],b=points[i],c=points[i+1],ab=Math.hypot(b.x-a.x,b.y-a.y),bc=Math.hypot(c.x-b.x,c.y-b.y),r=Math.min(radius,ab*.45,bc*.45);
     const before={x:b.x+(a.x-b.x)*r/ab,y:b.y+(a.y-b.y)*r/ab},after={x:b.x+(c.x-b.x)*r/bc,y:b.y+(c.y-b.y)*r/bc};
     d+=` L ${before.x} ${before.y} Q ${b.x} ${b.y} ${after.x} ${after.y}`;
   }
   const end=points.at(-1);return d+` L ${end.x} ${end.y}`;
 }
-export function connectionPath(a,b,edge={},obstacles=[]) {
-  const {start,end}=connectionEndpoints(a,b,edge),direct=curvePath(start,end);
-  if(!obstacles.length)return direct;
-  const numbers=direct.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi).map(Number),samples=[];
-  for(let i=0;i<=32;i++){const t=i/32,u=1-t;samples.push({x:u**3*numbers[0]+3*u*u*t*numbers[2]+3*u*t*t*numbers[4]+t**3*numbers[6],y:u**3*numbers[1]+3*u*u*t*numbers[3]+3*u*t*t*numbers[5]+t**3*numbers[7]});}
-  const padded=obstacles.map(r=>({x:r.x-12,y:r.y-12,w:r.w+24,h:r.h+24}));
-  if(!samples.slice(1).some((p,i)=>padded.some(r=>segmentBlocked(samples[i],p,r))))return direct;
-  return roundedRoute(routePoints(start,end,obstacles));
+export function connectionGeometry(a,b,edge={},obstacles=[]) {
+  const ac=itemCenter(a),bc=itemCenter(b);
+  const clearance=(p,r)=>Math.hypot(Math.max(r.x-p.x,0,p.x-r.x-r.w),Math.max(r.y-p.y,0,p.y-r.y-r.h));
+  let radius=96;const padded=obstacles.map(r=>{const pad=Math.max(0,Math.min(72,clearance(ac,r)-1,clearance(bc,r)-1));radius=Math.min(radius,Math.max(2,pad*2));return {x:r.x-pad,y:r.y-pad,w:r.w+pad*2,h:r.h+pad*2};});
+  const route=routePoints(ac,bc,padded,0);
+  const start=outlinePoint(a,route[1]||bc,edge.from_anchor),end=outlinePoint(b,route.at(-2)||ac,edge.to_anchor);
+  const points=[start,...route.slice(1,-1),end];
+  return {start,end,points,path:points.length===2?curvePath(start,end):roundedRoute(points,radius)};
 }
+export function connectionPath(a,b,edge={},obstacles=[]) {return connectionGeometry(a,b,edge,obstacles).path;}
 export function selectionBounds(elements) {
-  const boxes=elements.filter(e=>e&&e.type!=='connection');if(!boxes.length)return null;
+  const boxes=elements.filter(e=>e&&e.type!=='connection').map(rotatedBounds);if(!boxes.length)return null;
   const x=Math.min(...boxes.map(e=>e.x)),y=Math.min(...boxes.map(e=>e.y));
   return {x,y,w:Math.max(...boxes.map(e=>e.x+e.w))-x,h:Math.max(...boxes.map(e=>e.y+e.h))-y};
 }
@@ -151,5 +153,5 @@ export function fitResizedCard(original,changes,displayedHeight){
 
 export function connectionPorts(box){
  const center=box.text_center||{x:box.x+box.w/2,y:box.y+box.h/2},x=Math.max(0,Math.min(1,(center.x-box.x)/box.w)),y=Math.max(0,Math.min(1,(center.y-box.y)/box.h));
- return [['left',0,y],['right',1,y],['top',x,0],['bottom',x,1]].map(([side,ax,ay])=>{if(box.shape){const p=outlinePoint(box,{x:box.x+ax*box.w,y:box.y+ay*box.h});ax=(p.x-box.x)/box.w;ay=(p.y-box.y)/box.h;}return {side,x:ax,y:ay};});
+ return [['left',0,y],['right',1,y],['top',x,0],['bottom',x,1]].map(([side,ax,ay])=>{if(box.shape){const p=outlinePoint({...box,rotation:0},{x:box.x+ax*box.w,y:box.y+ay*box.h});ax=(p.x-box.x)/box.w;ay=(p.y-box.y)/box.h;}return {side,x:ax,y:ay};});
 }

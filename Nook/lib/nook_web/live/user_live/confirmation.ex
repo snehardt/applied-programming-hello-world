@@ -7,11 +7,7 @@ defmodule NookWeb.UserLive.Confirmation do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm">
-        <div class="text-center">
-          <.header>Welcome {@user.email}</.header>
-        </div>
-
+      <Layouts.auth_frame title="Confirm your login" subtitle={@user.email}>
         <.form
           :if={!@user.confirmed_at}
           for={@form}
@@ -67,7 +63,7 @@ defmodule NookWeb.UserLive.Confirmation do
         <p :if={!@user.confirmed_at} class="alert alert-outline mt-8">
           Tip: If you prefer passwords, you can enable them in the user settings.
         </p>
-      </div>
+      </Layouts.auth_frame>
     </Layouts.app>
     """
   end

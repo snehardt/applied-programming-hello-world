@@ -21,15 +21,19 @@ defmodule NookWeb.BoardChannelTest do
       "points" => [[-10, 20], [50, 70]],
       "color" => "#210a3b",
       "width" => 4,
+      "linear" => true,
+      "opacity" => 0.3,
       "id" => "forged"
     }
 
     push(sender, "drawing", preview)
-    assert_push("drawing", %{"id" => id, "visible" => true})
+    assert_push("drawing", %{"id" => id, "visible" => true, "linear" => true, "opacity" => 0.3})
     refute id == "forged"
     push(sender, "drawing", preview)
     refute_push("drawing", _, 20)
     push(sender, "drawing", Map.put(preview, "points", List.duplicate([0, 0], 129)))
+    refute_push("drawing", _, 20)
+    push(sender, "drawing", Map.put(preview, "opacity", "invalid"))
     refute_push("drawing", _, 20)
     push(sender, "drawing", %{"visible" => false})
     assert_push("drawing", %{"visible" => false})
